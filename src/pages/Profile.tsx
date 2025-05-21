@@ -1,10 +1,12 @@
+import { useState } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import { BiSolidWallet } from "react-icons/bi";
 import { Link } from "react-router-dom";
+import TopUp from "../components/TopUp";
 
 function Profile() {
     const { t } = useTranslation();
-    const termWord =""
+    const [topUpPrompt, setTopUpPrompt] = useState(false)
     
     return (
         <div>
@@ -43,15 +45,14 @@ function Profile() {
                 <p className="block text-neutral-500 font-medium">RWF</p>
             </div>
             
-            <button className="bg-brand font-bold text-white  pl-3 pr-3 text-sm rounded-sm p-0.5 mr-2 cursor-pointer active:scale-95">
+            <button onClick={()=>setTopUpPrompt(true)} className="bg-brand font-bold text-white  pl-3 pr-3 text-sm rounded-sm p-0.5 mr-2 cursor-pointer active:scale-95">
                 {t('topup')}
             </button>
 
         </div>
         <p className="text-sm w-fit mx-auto mt-3 dark:text-white">
 
-         <Trans
-        
+         <Trans // A Trans component gives you more customization capabilities
         i18nKey='walletNotice'
         values={{item:t('termsAndConditions')}}
         components={{
@@ -60,6 +61,9 @@ function Profile() {
         /> 
         </p>
         </div>
+        {
+           topUpPrompt && <TopUp onClose={()=>setTopUpPrompt(false)}/> 
+        }
         </div>
     )
 }

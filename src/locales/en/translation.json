@@ -26,5 +26,10 @@
     "wallet": "Wallet",
     "termsAndConditions": "Terms & conditions",
     "walletNotice": "Make sure you have read our <1 to='#'>{{item}}</1>",
-    "topup": "Top up" 
+    "topup": "Top up" ,
+    "insufficientBalance": "Insufficient Balance",
+    "iBMessage": "You have insufficient funds to buy this ticket, you need:",
+    "currentBalance": "Current Balance",
+    "add": "Add",
+    "with": "with"
 }

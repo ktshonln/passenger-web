@@ -26,5 +26,10 @@
     "wallet": "Ikofi",
     "termsAndConditions": "Amategeko n'amabwiriza",
     "walletNotice": "Shishoza neza ko wasomye <1 to='/terms-and-conditions'>{{item}}</1> yacu",
-    "topup": "Ongera"
+    "topup": "Ongera",
+    "insufficientBalance":"Nta mafaranga ahagihe",
+    "iBMessage": "Nta mafaranga ahagije mufite yo kugura iyi tike, mukeneye:",
+    "currentBalance": "Ubu mufite",
+    "add": "Ongeraho",
+    "with": "ukoresheje"
 }

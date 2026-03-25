@@ -3,8 +3,46 @@
 
 @theme {
   --font-heebo: "Heebo", sans-serif;
-  --color-brand: #2e82c8;
+  --color-brand: #008BFF;
   --color-brand2: #6a717d;
 }
 
 @custom-variant dark (&:where(.dark, .dark *));
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@utility animate-fade-in {
+  animation: fadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.custom-scroll::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.custom-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scroll::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+}
+
+.dark .custom-scroll::-webkit-scrollbar-thumb {
+  background: #334155;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}

@@ -22,7 +22,7 @@ const prevStep = ()=>{
     setStep(step-1)
 }
     return (
-        <div className="fixed inset-0 bg-black/50 dark:bg-neutral-900/90 flex  items-center justify-center overflow-hidden">
+        <div className="fixed inset-0 z-[100] bg-black/50 dark:bg-neutral-900/90 flex items-center justify-center overflow-hidden">
             <div className="bg-white  dark:bg-black sm:min-w-80 lg:min-w-sm rounded-lg max-h-lvh md:h-3/4 md:w-xl overflow-y-auto relative">
             <div className="p-10 h-full justify-items-center">
                 <AiOutlineClose onClick={onClose} className="absolute top-5 right-5 cursor-pointer dark:text-white"/>

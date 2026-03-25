@@ -1,18 +1,19 @@
 import { GrLanguage } from "react-icons/gr";
 import DarkModeToggle from "./components/DarkModeToggle";
-import { changeLanguage } from "i18next";
+// Removed changeLanguage
 import i18n from "./i18n";
 import { useTranslation } from "react-i18next";
 import { useState, useRef, useEffect } from "react";
-import { Link, Outlet, useLocation } from "react-router-dom";
+import { Link, Outlet } from "react-router-dom";
 import { BiSolidUserCircle } from "react-icons/bi";
 import { FiChevronDown, FiUser, FiLogOut } from "react-icons/fi";
+import { useUser } from "./hooks/useUser";
 
 type Language = "en" | "kiny" | "fr";
 
 const MainLayout = () => {
   const { t } = useTranslation();
-  const location = useLocation();
+  const { data: user } = useUser();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showLanguageMenu, setShowLanguageMenu] = useState(false);
   const currentYear = new Date().getFullYear();
@@ -106,12 +107,20 @@ const MainLayout = () => {
 
               <div className={`absolute right-0 top-14 w-56 bg-white dark:bg-[#1F2937] border border-gray-100 dark:border-white/10 rounded-2xl shadow-2xl shadow-gray-200/50 dark:shadow-black/60 py-2 origin-top-right z-50 transition-all duration-200 ${showProfileMenu ? 'scale-100 opacity-100 pointer-events-auto' : 'scale-95 opacity-0 pointer-events-none'}`}>
                 <div className="px-5 py-4 border-b border-gray-100 dark:border-white/5 mb-2 flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-brand/10 text-brand flex items-center justify-center shrink-0">
-                    <BiSolidUserCircle className="w-full h-full text-brand/70" />
+                  <div className="w-10 h-10 rounded-full bg-brand/10 text-brand flex items-center justify-center shrink-0 overflow-hidden">
+                    {user?.avatar_url ? (
+                      <img src={user.avatar_url} alt="Profile" className="w-full h-full object-cover" />
+                    ) : (
+                      <BiSolidUserCircle className="w-full h-full text-brand/70" />
+                    )}
                   </div>
                   <div className="flex flex-col min-w-0">
-                    <p className="text-sm font-bold text-gray-900 dark:text-white truncate">Patrick Ishimwe</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 truncate">patrick@example.com</p>
+                    <p className="text-sm font-bold text-gray-900 dark:text-white truncate">
+                      {user ? `${user.first_name} ${user.last_name}` : "Passenger"}
+                    </p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                      {user?.email || "Manage your bookings"}
+                    </p>
                   </div>
                 </div>
                 <Link 

@@ -1,18 +1,10 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import { BiSolidWallet, BiShieldQuarter, BiSolidUserCircle } from "react-icons/bi";
-import { FiUser, FiLock, FiBell, FiGlobe, FiCamera, FiCheck } from "react-icons/fi";
+import { FiUser, FiLock, FiBell, FiGlobe, FiCamera, FiCheck, FiLoader } from "react-icons/fi";
 import { Link } from "react-router-dom";
 import TopUp from "../components/TopUp";
-
-// Simulated user data
-const mockUser = {
-  firstName: "Patrick",
-  lastName: "Ishimwe",
-  email: "patrick@example.com",
-  phone: "0788888888",
-  avatar: "",
-};
+import { useUser, useUpdateUser, useChangePassword } from "../hooks/useUser";
 
 export default function Profile() {
   const { t, i18n } = useTranslation();
@@ -20,16 +12,52 @@ export default function Profile() {
   const [topUpPrompt, setTopUpPrompt] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // React Query Hooks
+  const { data: user, isLoading } = useUser();
+  const updateUser = useUpdateUser();
+  const changePassword = useChangePassword();
+
   // States
-  const [avatarPreview, setAvatarPreview] = useState(mockUser.avatar);
+  const [avatarPreview, setAvatarPreview] = useState("");
   const [passwords, setPasswords] = useState({ current: "", new: "", confirm: "" });
   const [notifications, setNotifications] = useState({ email: true, sms: false });
+
+  // Sync avatar_url from server payload
+  useEffect(() => {
+    if (user?.avatar_url) {
+      setAvatarPreview(user.avatar_url);
+    }
+  }, [user?.avatar_url]);
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const imgUrl = URL.createObjectURL(e.target.files[0]);
       setAvatarPreview(imgUrl);
+      // Automatically patch avatar_url
+      updateUser.mutate({ avatar_url: imgUrl });
     }
+  };
+
+  const handleProfileSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const fd = new FormData(e.currentTarget);
+    updateUser.mutate({
+      first_name: fd.get("first_name") as string,
+      last_name: fd.get("last_name") as string,
+      email: fd.get("email") as string,
+    });
+  };
+
+  const handlePasswordSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (passwords.new !== passwords.confirm) {
+      alert("New passwords do not match.");
+      return;
+    }
+    changePassword.mutate(
+      { current_password: passwords.current, new_password: passwords.new },
+      { onSuccess: () => setPasswords({ current: "", new: "", confirm: "" }) }
+    );
   };
 
   const tabs = [
@@ -38,6 +66,14 @@ export default function Profile() {
     { id: "preferences", label: "Preferences", icon: <FiBell size={18} /> },
     { id: "wallet", label: t("wallet", "Wallet"), icon: <BiSolidWallet size={18} /> },
   ];
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#F8FAFC] dark:bg-[#0B1120]">
+        <FiLoader className="animate-spin text-brand" size={48} />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#0B1120] pb-20 relative overflow-hidden">
@@ -115,29 +151,35 @@ export default function Profile() {
                   </div>
 
                   {/* Form Inputs */}
-                  <form className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-5 w-full" onSubmit={(e) => e.preventDefault()}>
+                  <form className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-5 w-full" onSubmit={handleProfileSubmit}>
                     {[{
-                      id: 'firstName', label: t('signUpFirstName', 'First Name'), defaultValue: mockUser.firstName, type: 'text'
+                      id: 'firstName', name: 'first_name', label: t('signUpFirstName', 'First Name'), defaultValue: user?.first_name, type: 'text'
                     }, {
-                      id: 'lastName', label: t('signUpLastName', 'Last Name'), defaultValue: mockUser.lastName, type: 'text'
+                      id: 'lastName', name: 'last_name', label: t('signUpLastName', 'Last Name'), defaultValue: user?.last_name, type: 'text'
                     }, {
-                      id: 'email', label: t('signUpEmail', 'Email Address'), defaultValue: mockUser.email, type: 'email', fullWidth: true
+                      id: 'email', name: 'email', label: t('signUpEmail', 'Email Address'), defaultValue: user?.email, type: 'email', fullWidth: true
                     }, {
-                      id: 'phone', label: t('signUpPhone', 'Phone Number'), defaultValue: mockUser.phone, type: 'tel', fullWidth: true
+                      id: 'phone', name: 'phone_number', label: t('signUpPhone', 'Phone Number'), defaultValue: user?.phone_number, type: 'tel', fullWidth: true
                     }].map((field) => (
                       <div key={field.id} className={`${field.fullWidth ? 'sm:col-span-2' : ''} group`}>
                         <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1.5 transition-colors group-focus-within:text-brand">{field.label}</label>
                         <input 
+                          name={field.name}
                           type={field.type} 
-                          defaultValue={field.defaultValue} 
-                          className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-neutral-700 bg-gray-50/50 dark:bg-[#1F2937]/50 text-gray-900 dark:text-white text-sm focus:bg-white dark:focus:bg-[#111827] focus:border-brand/50 focus:ring-2 focus:ring-brand/20 transition-all outline-none" 
+                          defaultValue={field.defaultValue || ""} 
+                          disabled={field.name === "phone_number"} // Phone requires OTP re-verification per contract
+                          className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-neutral-700 bg-gray-50/50 dark:bg-[#1F2937]/50 text-gray-900 dark:text-white text-sm focus:bg-white dark:focus:bg-[#111827] focus:border-brand/50 focus:ring-2 focus:ring-brand/20 transition-all outline-none disabled:opacity-50 disabled:cursor-not-allowed" 
                         />
                       </div>
                     ))}
                     
                     <div className="sm:col-span-2 mt-4 flex justify-end">
-                      <button type="submit" className="bg-brand text-white px-6 py-2.5 rounded-xl font-semibold shadow-md shadow-brand/20 hover:shadow-lg hover:-translate-y-0.5 transition-all w-full sm:w-auto text-sm">
-                        {t('profileSubmit', 'Save Changes')}
+                      <button 
+                        type="submit" 
+                        disabled={updateUser.isPending}
+                        className={`bg-brand text-white px-6 py-2.5 rounded-xl font-semibold shadow-md border border-brand hover:border-brand/80 hover:bg-brand/90 transition-all w-full sm:w-auto text-sm ${updateUser.isPending ? 'opacity-70 cursor-not-allowed' : 'active:scale-95 hover:-translate-y-0.5 shadow-brand/20 hover:shadow-lg'}`}
+                      >
+                        {updateUser.isPending ? "Saving..." : t('profileSubmit', 'Save Changes')}
                       </button>
                     </div>
                   </form>
@@ -153,26 +195,30 @@ export default function Profile() {
                   <h2 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white tracking-tight">Security Settings</h2>
                 </div>
                 
-                <form className="max-w-md space-y-5" onSubmit={(e) => e.preventDefault()}>
+                <form className="max-w-md space-y-5" onSubmit={handlePasswordSubmit}>
                   <div className="group">
                     <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1.5 transition-colors group-focus-within:text-brand">Current Password</label>
-                    <input type="password" placeholder="••••••••" value={passwords.current} onChange={(e)=>setPasswords({...passwords, current: e.target.value})} className="w-full px-4 py-3 text-sm rounded-xl border border-gray-200 dark:border-neutral-700 bg-gray-50/50 dark:bg-[#1F2937]/50 text-gray-900 dark:text-white focus:bg-white dark:focus:bg-[#111827] focus:border-brand/50 focus:ring-2 focus:ring-brand/20 transition-all outline-none" />
+                    <input type="password" required placeholder="••••••••" value={passwords.current} onChange={(e)=>setPasswords({...passwords, current: e.target.value})} className="w-full px-4 py-3 text-sm rounded-xl border border-gray-200 dark:border-neutral-700 bg-gray-50/50 dark:bg-[#1F2937]/50 text-gray-900 dark:text-white focus:bg-white dark:focus:bg-[#111827] focus:border-brand/50 focus:ring-2 focus:ring-brand/20 transition-all outline-none" />
                   </div>
                   
                   <div className="pt-5 mt-5 border-t border-gray-100 dark:border-white/5 space-y-5">
                     <div className="group">
                       <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1.5 transition-colors group-focus-within:text-brand">New Password</label>
-                      <input type="password" placeholder="••••••••" value={passwords.new} onChange={(e)=>setPasswords({...passwords, new: e.target.value})} className="w-full px-4 py-3 text-sm rounded-xl border border-gray-200 dark:border-neutral-700 bg-gray-50/50 dark:bg-[#1F2937]/50 text-gray-900 dark:text-white focus:bg-white dark:focus:bg-[#111827] focus:border-brand/50 focus:ring-2 focus:ring-brand/20 transition-all outline-none" />
+                      <input type="password" required placeholder="••••••••" value={passwords.new} onChange={(e)=>setPasswords({...passwords, new: e.target.value})} className="w-full px-4 py-3 text-sm rounded-xl border border-gray-200 dark:border-neutral-700 bg-gray-50/50 dark:bg-[#1F2937]/50 text-gray-900 dark:text-white focus:bg-white dark:focus:bg-[#111827] focus:border-brand/50 focus:ring-2 focus:ring-brand/20 transition-all outline-none" />
                     </div>
                     <div className="group">
                       <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1.5 transition-colors group-focus-within:text-brand">Confirm New Password</label>
-                      <input type="password" placeholder="••••••••" value={passwords.confirm} onChange={(e)=>setPasswords({...passwords, confirm: e.target.value})} className="w-full px-4 py-3 text-sm rounded-xl border border-gray-200 dark:border-neutral-700 bg-gray-50/50 dark:bg-[#1F2937]/50 text-gray-900 dark:text-white focus:bg-white dark:focus:bg-[#111827] focus:border-brand/50 focus:ring-2 focus:ring-brand/20 transition-all outline-none" />
+                      <input type="password" required placeholder="••••••••" value={passwords.confirm} onChange={(e)=>setPasswords({...passwords, confirm: e.target.value})} className="w-full px-4 py-3 text-sm rounded-xl border border-gray-200 dark:border-neutral-700 bg-gray-50/50 dark:bg-[#1F2937]/50 text-gray-900 dark:text-white focus:bg-white dark:focus:bg-[#111827] focus:border-brand/50 focus:ring-2 focus:ring-brand/20 transition-all outline-none" />
                     </div>
                   </div>
                   
                   <div className="pt-4">
-                    <button type="submit" className="bg-brand text-white px-8 py-3 rounded-xl font-bold shadow-md shadow-brand/20 hover:shadow-lg hover:-translate-y-0.5 transition-all w-full sm:w-auto text-sm">
-                      Update Password
+                    <button 
+                      type="submit" 
+                      disabled={changePassword.isPending}
+                      className={`bg-brand text-white px-8 py-3 rounded-xl font-bold shadow-md w-full sm:w-auto text-sm transition-all border border-brand hover:border-brand/80 ${changePassword.isPending ? 'opacity-70 cursor-not-allowed' : 'shadow-brand/20 hover:shadow-lg hover:bg-brand/90 hover:-translate-y-0.5 active:scale-95'}`}
+                    >
+                      {changePassword.isPending ? "Updating..." : "Update Password"}
                     </button>
                   </div>
                 </form>

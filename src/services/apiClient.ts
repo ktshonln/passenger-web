@@ -2,7 +2,7 @@ import axios, { AxiosRequestConfig } from "axios";
 
 export const baseUrl = 'https://example.com/api/v1';
 
-const axiosInstance = axios.create({
+export const axiosInstance = axios.create({
     baseURL: baseUrl, //"https://e2689ec1-a734-4f3a-80dd-77f1a45ef528.mock.pstmn.io",
 });
 
@@ -34,7 +34,12 @@ class APIClient<TResponse> {
             .then((res) => res.data);
     };
 
-
+    patch = <TRequest>(input: TRequest, id?: string | number) => {
+        const url = id ? `${this.endpoint}/${id}` : this.endpoint;
+        return axiosInstance
+            .patch<TResponse>(url, input)
+            .then((res) => res.data);
+    };
 
     registerUser = <TRequest>(userData: TRequest) => {
         return axiosInstance

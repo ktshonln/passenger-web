@@ -22,6 +22,10 @@ export interface ForgotPasswordPayload {
   identifier: string;
 }
 
+export interface ResendOtpPayload {
+  phone_number: string;
+}
+
 export interface ResetPasswordPayload {
   token: string;
   new_password: string;
@@ -31,6 +35,7 @@ export default {
   login: (data: LoginPayload) => axiosInstance.post("/auth/login", data).then(res => res.data),
   register: (data: RegisterPayload) => axiosInstance.post("/auth/register", data).then(res => res.data),
   verifyPhone: (data: VerifyPhonePayload) => axiosInstance.post("/auth/verify-phone", data).then(res => res.data),
+  resendOtp: (data: ResendOtpPayload) => axiosInstance.post("/auth/resend-otp", data).then(res => res.data),
   forgotPassword: (data: ForgotPasswordPayload) => axiosInstance.post("/auth/forgot-password", data).then(res => res.data),
   resetPassword: (data: ResetPasswordPayload) => axiosInstance.post("/auth/reset-password", data).then(res => res.data),
   logout: () => axiosInstance.post("/auth/logout").then(() => true)

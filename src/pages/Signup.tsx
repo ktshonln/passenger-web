@@ -1,17 +1,27 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useRegister, useVerifyPhone } from "../hooks/useAuth";
+import { useRegister, useVerifyPhone, useResendOtp } from "../hooks/useAuth";
 import { FiUser, FiMail, FiPhone, FiLock, FiLoader } from "react-icons/fi";
 
 const Signup = () => {
   const navigate = useNavigate();
   const { mutate: register, isPending: isRegistering } = useRegister();
   const { mutate: verifyOtp, isPending: isVerifying } = useVerifyPhone();
+  const { mutate: resendOtp, isPending: isResending } = useResendOtp();
   
   const [step, setStep] = useState<1 | 2>(1);
+  const [timer, setTimer] = useState(60);
   const [userId, setUserId] = useState<string>("");
   const [error, setError] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    let interval: any;
+    if (step === 2 && timer > 0) {
+      interval = setInterval(() => setTimer((t) => t - 1), 1000);
+    }
+    return () => clearInterval(interval);
+  }, [step, timer]);
 
   const [formData, setFormData] = useState({
     first_name: "", last_name: "", phone_number: "", email: "", password: "", otp: ""
@@ -45,7 +55,14 @@ const Signup = () => {
       onSuccess: (data: any) => {
         setUserId(data.user_id);
         setStep(2);
+        setTimer(60);
       }
+    });
+  };
+
+  const handleResend = () => {
+    resendOtp({ phone_number: formData.phone_number }, {
+      onSuccess: () => setTimer(60)
     });
   };
 
@@ -165,6 +182,24 @@ const Signup = () => {
                 {isVerifying ? "Verifying..." : "Confirm OTP"}
               </button>
             </form>
+
+            <div className="text-center text-sm font-medium mt-6">
+              {timer > 0 ? (
+                <p className="text-gray-500 dark:text-gray-400">Resend code in <span className="font-bold text-gray-900 dark:text-white">{timer}s</span></p>
+              ) : (
+                <p className="text-gray-500 dark:text-gray-400">
+                  Didn't receive the code?{" "}
+                  <button 
+                    type="button" 
+                    onClick={handleResend}
+                    disabled={isResending}
+                    className="text-brand font-bold hover:underline ml-1"
+                  >
+                    {isResending ? "Sending..." : "Resend OTP"}
+                  </button>
+                </p>
+              )}
+            </div>
           </div>
         )}
       </div>

@@ -63,6 +63,16 @@ export const authHandlers = [
     });
   }),
 
+  // Resend OTP
+  http.post(`${baseUrl}/auth/resend-otp`, async ({ request }) => {
+    await delay(600);
+    const body = await request.json() as any;
+    const user = usersDb.find(u => u.phone_number === body.phone_number);
+    if (!user) return new HttpResponse(JSON.stringify({ message: "User not found" }), { status: 404 });
+    otps[user.id] = "123456";
+    return HttpResponse.json({ message: "OTP resent successfully" });
+  }),
+
   // Verify Phone (Step 2)
   http.post(`${baseUrl}/auth/verify-phone`, async ({ request }) => {
     await delay(600);

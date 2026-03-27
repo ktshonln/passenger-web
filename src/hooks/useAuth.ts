@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import authService, { LoginPayload, RegisterPayload, VerifyPhonePayload, ForgotPasswordPayload, ResetPasswordPayload } from "../services/authService";
+import authService, { LoginPayload, RegisterPayload, VerifyPhonePayload, ForgotPasswordPayload, ResetPasswordPayload, ResendOtpPayload } from "../services/authService";
 import { useToastStore } from "../stores/toastStore";
 import { CACHE_KEY_USER } from "./useUser";
 
@@ -35,6 +35,15 @@ export const useVerifyPhone = () => {
       showToast("Phone verified! You are now logged in.", "success");
     },
     onError: (err: any) => showToast(err?.response?.data?.message || "Verification failed", "error")
+  });
+};
+
+export const useResendOtp = () => {
+  const showToast = useToastStore(s => s.showToast);
+  return useMutation({
+    mutationFn: (data: ResendOtpPayload) => authService.resendOtp(data),
+    onSuccess: () => showToast("A new OTP has been sent.", "success"),
+    onError: () => showToast("Failed to resend OTP.", "error")
   });
 };
 

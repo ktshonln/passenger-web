@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useTranslation } from "react-i18next";
 import { useLogin } from "../hooks/useAuth";
 import { FiMail, FiLock, FiLoader } from "react-icons/fi";
 
@@ -21,7 +20,20 @@ const Login = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const errors: Record<string, string> = {};
-    if (!formData.identifier) errors.identifier = "Phone or email required";
+    const phoneRegex = /^(\+2507|07)\d{8}$/;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!formData.identifier) {
+      errors.identifier = "Phone or email required";
+    } else {
+      const cleanInput = formData.identifier.replace(/\s/g, "");
+      const isPhone = phoneRegex.test(cleanInput);
+      const isEmail = emailRegex.test(cleanInput);
+      if (!isPhone && !isEmail) {
+        errors.identifier = "Invalid phone or email format";
+      }
+    }
+
     if (!formData.password) errors.password = "Password required";
     
     if (Object.keys(errors).length > 0) {

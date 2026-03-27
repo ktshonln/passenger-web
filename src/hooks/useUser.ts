@@ -9,6 +9,7 @@ export const useUser = () => {
     queryKey: CACHE_KEY_USER,
     queryFn: userService.getCurrentUser,
     staleTime: 10 * 60 * 1000, // 10 minutes
+    retry: false, // Do not retry on 401 to ensure immediate redirect
   });
 };
 

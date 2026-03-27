@@ -20,9 +20,17 @@ const Signup = () => {
   const handleRegister = (e: React.FormEvent) => {
     e.preventDefault();
     const errors: Record<string, string> = {};
+    const phoneRegex = /^(\+2507|07)\d{8}$/;
+
     if (!formData.first_name) errors.first_name = "First name required";
     if (!formData.last_name) errors.last_name = "Last name required";
-    if (!formData.phone_number) errors.phone_number = "Phone number required";
+    
+    if (!formData.phone_number) {
+      errors.phone_number = "Phone number required";
+    } else if (!phoneRegex.test(formData.phone_number.replace(/\s/g, ""))) {
+      errors.phone_number = "Invalid format (e.g. +2507...)";
+    }
+
     if (!formData.password) errors.password = "Password required";
     
     if (Object.keys(errors).length > 0) {

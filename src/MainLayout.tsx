@@ -80,7 +80,7 @@ const MainLayout = () => {
                     {user.avatar_url ? (
                       <img src={user.avatar_url} alt="Profile" className="w-full h-full object-cover transition-transform hover:scale-105" />
                     ) : (
-                      <BiSolidUserCircle className={`transition-colors w-full h-full scale-110 mt-1 ${isHome ? 'text-white' : 'text-gray-300 dark:text-gray-600 hover:text-brand/50'}`} />
+                      <BiSolidUserCircle className={`transition-colors w-full h-full scale-110 ${isHome ? 'text-white' : 'text-gray-300 dark:text-gray-600 hover:text-brand/50'}`} />
                     )}
                   </button>
 

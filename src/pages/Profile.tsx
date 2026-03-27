@@ -77,7 +77,7 @@ export default function Profile() {
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#0B1120] pb-20 relative overflow-hidden">
-      
+
       {/* Subtle Background Orbs */}
       <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-brand/5 blur-[100px] rounded-full pointer-events-none" />
 
@@ -88,7 +88,7 @@ export default function Profile() {
         </header>
 
         <div className="flex flex-col md:flex-row gap-6 items-start">
-          
+
           {/* Sidebar Navigation */}
           <div className="w-full md:w-1/4 bg-white/70 dark:bg-[#111827]/70 backdrop-blur-md border border-gray-100 dark:border-white/5 shadow-md shadow-gray-200/50 dark:shadow-black/50 rounded-2xl p-3 shrink-0">
             <div className="flex text-sm md:flex-col overflow-x-auto gap-2 custom-scroll hide-scrollbar">
@@ -98,11 +98,10 @@ export default function Profile() {
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-xl font-semibold transition-all duration-300 relative overflow-hidden outline-none whitespace-nowrap ${
-                      isActive
+                    className={`flex items-center gap-3 px-4 py-3 rounded-xl font-semibold transition-all duration-300 relative overflow-hidden outline-none whitespace-nowrap ${isActive
                         ? "text-brand dark:text-white bg-brand/10 dark:bg-brand/20"
                         : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-white/5"
-                    }`}
+                      }`}
                   >
                     {isActive && (
                       <span className="absolute left-0 top-0 bottom-0 w-1 bg-brand rounded-r-full" />
@@ -119,7 +118,7 @@ export default function Profile() {
 
           {/* Main Content Area */}
           <div className="w-full md:w-3/4 bg-white/80 dark:bg-[#111827]/80 backdrop-blur-md border border-gray-100 dark:border-white/5 shadow-lg shadow-gray-200/50 dark:shadow-black/60 rounded-2xl p-6 lg:p-10 transition-all min-h-[500px]">
-            
+
             {/* Personal Info Tab */}
             {activeTab === "personal" && (
               <div className="animate-fade-in">
@@ -127,7 +126,7 @@ export default function Profile() {
                   <div className="p-2.5 bg-brand/10 rounded-xl text-brand"><FiUser size={20} /></div>
                   <h2 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white tracking-tight">Personal Information</h2>
                 </div>
-                
+
                 <div className="flex flex-col lg:flex-row gap-8 items-start">
                   {/* Avatar Editor */}
                   <div className="relative group mx-auto lg:mx-0 shrink-0">
@@ -135,18 +134,18 @@ export default function Profile() {
                       {avatarPreview ? (
                         <img src={avatarPreview} alt="Avatar" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                       ) : (
-                        <BiSolidUserCircle className="w-full h-full text-gray-200 dark:text-gray-700 scale-[1.15] mt-1" />
+                        <BiSolidUserCircle className="w-full h-full text-gray-200 dark:text-gray-700 scale-[1.15]" />
                       )}
                       <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center cursor-pointer" onClick={() => fileInputRef.current?.click()}>
-                         <FiCamera size={24} className="text-white drop-shadow-md" />
+                        <FiCamera size={24} className="text-white drop-shadow-md" />
                       </div>
                     </div>
-                    <input 
-                      type="file" 
-                      ref={fileInputRef} 
-                      onChange={handleAvatarChange} 
-                      accept="image/*" 
-                      className="hidden" 
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={handleAvatarChange}
+                      accept="image/*"
+                      className="hidden"
                     />
                   </div>
 
@@ -163,19 +162,19 @@ export default function Profile() {
                     }].map((field) => (
                       <div key={field.id} className={`${field.fullWidth ? 'sm:col-span-2' : ''} group`}>
                         <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1.5 transition-colors group-focus-within:text-brand">{field.label}</label>
-                        <input 
+                        <input
                           name={field.name}
-                          type={field.type} 
-                          defaultValue={field.defaultValue || ""} 
+                          type={field.type}
+                          defaultValue={field.defaultValue || ""}
                           disabled={field.name === "phone_number"} // Phone requires OTP re-verification per contract
-                          className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-neutral-700 bg-gray-50/50 dark:bg-[#1F2937]/50 text-gray-900 dark:text-white text-sm focus:bg-white dark:focus:bg-[#111827] focus:border-brand/50 focus:ring-2 focus:ring-brand/20 transition-all outline-none disabled:opacity-50 disabled:cursor-not-allowed" 
+                          className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-neutral-700 bg-gray-50/50 dark:bg-[#1F2937]/50 text-gray-900 dark:text-white text-sm focus:bg-white dark:focus:bg-[#111827] focus:border-brand/50 focus:ring-2 focus:ring-brand/20 transition-all outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                         />
                       </div>
                     ))}
-                    
+
                     <div className="sm:col-span-2 mt-4 flex justify-end">
-                      <button 
-                        type="submit" 
+                      <button
+                        type="submit"
                         disabled={updateUser.isPending}
                         className={`bg-brand text-white px-6 py-2.5 rounded-xl font-semibold shadow-md border border-brand hover:border-brand/80 hover:bg-brand/90 transition-all w-full sm:w-auto text-sm ${updateUser.isPending ? 'opacity-70 cursor-not-allowed' : 'active:scale-95 hover:-translate-y-0.5 shadow-brand/20 hover:shadow-lg'}`}
                       >
@@ -194,27 +193,27 @@ export default function Profile() {
                   <div className="p-2.5 bg-brand/10 rounded-xl text-brand"><BiShieldQuarter size={20} /></div>
                   <h2 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white tracking-tight">Security Settings</h2>
                 </div>
-                
+
                 <form className="max-w-md space-y-5" onSubmit={handlePasswordSubmit}>
                   <div className="group">
                     <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1.5 transition-colors group-focus-within:text-brand">Current Password</label>
-                    <input type="password" required placeholder="••••••••" value={passwords.current} onChange={(e)=>setPasswords({...passwords, current: e.target.value})} className="w-full px-4 py-3 text-sm rounded-xl border border-gray-200 dark:border-neutral-700 bg-gray-50/50 dark:bg-[#1F2937]/50 text-gray-900 dark:text-white focus:bg-white dark:focus:bg-[#111827] focus:border-brand/50 focus:ring-2 focus:ring-brand/20 transition-all outline-none" />
+                    <input type="password" required placeholder="••••••••" value={passwords.current} onChange={(e) => setPasswords({ ...passwords, current: e.target.value })} className="w-full px-4 py-3 text-sm rounded-xl border border-gray-200 dark:border-neutral-700 bg-gray-50/50 dark:bg-[#1F2937]/50 text-gray-900 dark:text-white focus:bg-white dark:focus:bg-[#111827] focus:border-brand/50 focus:ring-2 focus:ring-brand/20 transition-all outline-none" />
                   </div>
-                  
+
                   <div className="pt-5 mt-5 border-t border-gray-100 dark:border-white/5 space-y-5">
                     <div className="group">
                       <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1.5 transition-colors group-focus-within:text-brand">New Password</label>
-                      <input type="password" required placeholder="••••••••" value={passwords.new} onChange={(e)=>setPasswords({...passwords, new: e.target.value})} className="w-full px-4 py-3 text-sm rounded-xl border border-gray-200 dark:border-neutral-700 bg-gray-50/50 dark:bg-[#1F2937]/50 text-gray-900 dark:text-white focus:bg-white dark:focus:bg-[#111827] focus:border-brand/50 focus:ring-2 focus:ring-brand/20 transition-all outline-none" />
+                      <input type="password" required placeholder="••••••••" value={passwords.new} onChange={(e) => setPasswords({ ...passwords, new: e.target.value })} className="w-full px-4 py-3 text-sm rounded-xl border border-gray-200 dark:border-neutral-700 bg-gray-50/50 dark:bg-[#1F2937]/50 text-gray-900 dark:text-white focus:bg-white dark:focus:bg-[#111827] focus:border-brand/50 focus:ring-2 focus:ring-brand/20 transition-all outline-none" />
                     </div>
                     <div className="group">
                       <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1.5 transition-colors group-focus-within:text-brand">Confirm New Password</label>
-                      <input type="password" required placeholder="••••••••" value={passwords.confirm} onChange={(e)=>setPasswords({...passwords, confirm: e.target.value})} className="w-full px-4 py-3 text-sm rounded-xl border border-gray-200 dark:border-neutral-700 bg-gray-50/50 dark:bg-[#1F2937]/50 text-gray-900 dark:text-white focus:bg-white dark:focus:bg-[#111827] focus:border-brand/50 focus:ring-2 focus:ring-brand/20 transition-all outline-none" />
+                      <input type="password" required placeholder="••••••••" value={passwords.confirm} onChange={(e) => setPasswords({ ...passwords, confirm: e.target.value })} className="w-full px-4 py-3 text-sm rounded-xl border border-gray-200 dark:border-neutral-700 bg-gray-50/50 dark:bg-[#1F2937]/50 text-gray-900 dark:text-white focus:bg-white dark:focus:bg-[#111827] focus:border-brand/50 focus:ring-2 focus:ring-brand/20 transition-all outline-none" />
                     </div>
                   </div>
-                  
+
                   <div className="pt-4">
-                    <button 
-                      type="submit" 
+                    <button
+                      type="submit"
                       disabled={changePassword.isPending}
                       className={`bg-brand text-white px-8 py-3 rounded-xl font-bold shadow-md w-full sm:w-auto text-sm transition-all border border-brand hover:border-brand/80 ${changePassword.isPending ? 'opacity-70 cursor-not-allowed' : 'shadow-brand/20 hover:shadow-lg hover:bg-brand/90 hover:-translate-y-0.5 active:scale-95'}`}
                     >
@@ -239,7 +238,7 @@ export default function Profile() {
                         <h4 className="font-semibold text-gray-900 dark:text-gray-100 text-sm">Email Alerts</h4>
                         <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Digital tickets & account updates directly to your inbox.</p>
                       </div>
-                      <div className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors duration-300 ${notifications.email ? 'bg-brand' : 'bg-gray-300 dark:bg-gray-600'}`} onClick={(e) => { e.preventDefault(); setNotifications({...notifications, email: !notifications.email}) }}>
+                      <div className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors duration-300 ${notifications.email ? 'bg-brand' : 'bg-gray-300 dark:bg-gray-600'}`} onClick={(e) => { e.preventDefault(); setNotifications({ ...notifications, email: !notifications.email }) }}>
                         <div className={`bg-white w-4 h-4 rounded-full shadow-sm transform transition-transform duration-300 ${notifications.email ? 'translate-x-6' : 'translate-x-0'}`}></div>
                       </div>
                     </label>
@@ -249,7 +248,7 @@ export default function Profile() {
                         <h4 className="font-semibold text-gray-900 dark:text-gray-100 text-sm">Push & SMS</h4>
                         <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Quick boarding reminders and urgent delay notifications.</p>
                       </div>
-                      <div className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors duration-300 ${notifications.sms ? 'bg-brand' : 'bg-gray-300 dark:bg-gray-600'}`} onClick={(e) => { e.preventDefault(); setNotifications({...notifications, sms: !notifications.sms}) }}>
+                      <div className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors duration-300 ${notifications.sms ? 'bg-brand' : 'bg-gray-300 dark:bg-gray-600'}`} onClick={(e) => { e.preventDefault(); setNotifications({ ...notifications, sms: !notifications.sms }) }}>
                         <div className={`bg-white w-4 h-4 rounded-full shadow-sm transform transition-transform duration-300 ${notifications.sms ? 'translate-x-6' : 'translate-x-0'}`}></div>
                       </div>
                     </label>
@@ -269,14 +268,13 @@ export default function Profile() {
                     ].map((lang) => {
                       const isActive = i18n.language === lang.code;
                       return (
-                        <button 
+                        <button
                           key={lang.code}
                           onClick={() => i18n.changeLanguage(lang.code)}
-                          className={`relative p-4 rounded-2xl transition-all duration-300 text-left border flex flex-col gap-3 overflow-hidden ${
-                            isActive 
-                              ? 'border-brand bg-brand/5 shadow-sm shadow-brand/10' 
+                          className={`relative p-4 rounded-2xl transition-all duration-300 text-left border flex flex-col gap-3 overflow-hidden ${isActive
+                              ? 'border-brand bg-brand/5 shadow-sm shadow-brand/10'
                               : 'border-gray-100 dark:border-[#1F2937] bg-white dark:bg-[#111827] hover:border-brand/30 hover:shadow-sm'
-                          }`}
+                            }`}
                         >
                           {isActive && (
                             <div className="absolute top-3 right-3 text-brand">
@@ -301,12 +299,12 @@ export default function Profile() {
             {activeTab === "wallet" && (
               <div className="animate-fade-in">
                 <div className="flex items-center gap-3 mb-8 pb-5 border-b border-gray-100 dark:border-white/10">
-                  <div className="p-2.5 bg-brand/10 rounded-xl text-brand"><BiSolidWallet size={20} /></div> 
+                  <div className="p-2.5 bg-brand/10 rounded-xl text-brand"><BiSolidWallet size={20} /></div>
                   <h2 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white tracking-tight">{t('wallet')}</h2>
                 </div>
-                
+
                 <div className="relative overflow-hidden bg-gradient-to-br from-brand via-brand/90 to-blue-800 p-8 md:p-10 rounded-[2rem] shadow-xl shadow-brand/20 mb-8 w-full max-w-2xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6 hover:shadow-brand/30 transition-shadow">
-                  
+
                   <div className="absolute top-[-20%] right-[-10%] w-48 h-48 bg-white/10 rounded-full blur-[30px] pointer-events-none" />
                   <div className="absolute bottom-[-20%] left-[-10%] w-48 h-48 bg-black/10 rounded-full blur-[30px] pointer-events-none" />
 
@@ -319,13 +317,13 @@ export default function Profile() {
                       RWF
                     </span>
                   </div>
-                  
+
                   <div className="relative z-10 shrink-0 w-full sm:w-auto">
-                    <button 
-                      onClick={() => setTopUpPrompt(true)} 
+                    <button
+                      onClick={() => setTopUpPrompt(true)}
                       className="bg-white text-brand px-6 py-3 rounded-xl font-bold text-sm hover:bg-gray-50 transition-all shadow-md active:scale-95 w-full flex items-center justify-center gap-2"
                     >
-                      <BiSolidWallet size={20} /> 
+                      <BiSolidWallet size={20} />
                       Top Up Now
                     </button>
                   </div>
@@ -335,11 +333,11 @@ export default function Profile() {
                   <p className="text-xs text-gray-500 dark:text-gray-400">
                     <Trans
                       i18nKey='walletNotice'
-                      values={{item: t('termsAndConditions')}}
+                      values={{ item: t('termsAndConditions') }}
                       components={{
-                          1: <Link to="/terms-and-conditions" className="text-brand font-semibold hover:underline"/>
+                        1: <Link to="/terms-and-conditions" className="text-brand font-semibold hover:underline" />
                       }}
-                    /> 
+                    />
                   </p>
                 </div>
               </div>
@@ -349,7 +347,7 @@ export default function Profile() {
         </div>
       </div>
 
-      {topUpPrompt && <TopUp onClose={() => setTopUpPrompt(false)}/>}
+      {topUpPrompt && <TopUp onClose={() => setTopUpPrompt(false)} />}
     </div>
   );
 }

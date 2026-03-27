@@ -8,6 +8,8 @@ import Profile from "./pages/Profile";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import ProtectedRoute from "./components/ProtectedRoute";
+import InternalError from "./pages/InternalError";
+import Forbidden from "./pages/Forbidden";
 
 const App = () => {
   return (
@@ -27,6 +29,8 @@ const App = () => {
       </Route>
 
       </Route>
+      <Route path="500" element={<InternalError />} />
+      <Route path="403" element={<Forbidden />} />
       <Route path="*" element={<NotFound />} />
       </Routes>
       </BrowserRouter> 

@@ -7,6 +7,24 @@ export const axiosInstance = axios.create({
     withCredentials: true,
 });
 
+axiosInstance.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (error.response) {
+            const status = error.response.status;
+            // Intercept catastrophic system faults (500)
+            if (status === 500) {
+                window.location.href = '/500';
+            } 
+            // Intercept permission zone violations (403)
+            else if (status === 403) {
+                window.location.href = '/403';
+            }
+        }
+        return Promise.reject(error);
+    }
+);
+
 class APIClient<TResponse> {
     endpoint: string;
     constructor(endpoint: string) {

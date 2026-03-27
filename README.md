@@ -52,3 +52,6 @@ export default tseslint.config({
   },
 })
 ```
+
+## Notes
+- the users/me/password doesn't exist, please use the auth endpoint

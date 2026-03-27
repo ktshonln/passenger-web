@@ -1,9 +1,10 @@
 import axios, { AxiosRequestConfig } from "axios";
 
-export const baseUrl = 'https://example.com/api/v1';
+export const baseUrl = import.meta.env.VITE_API_URL || '/api/v1'; // Dynamically use import.meta.env.VITE_API_URL || '/api/v1'. By falling back to /api/v1 locally, we are now making "same-origin" requests that completely bypass all CORS restrictions. 
 
 export const axiosInstance = axios.create({
-    baseURL: baseUrl, //"https://e2689ec1-a734-4f3a-80dd-77f1a45ef528.mock.pstmn.io",
+    baseURL: baseUrl,
+    withCredentials: true,
 });
 
 class APIClient<TResponse> {

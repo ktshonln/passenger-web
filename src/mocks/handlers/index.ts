@@ -1,6 +1,7 @@
 import { http, HttpResponse } from "msw";
 import { handlers as locationHandlers } from "./locations";
 import { userHandlers } from "./user";
+import { authHandlers } from "./auth";
 import { corsHeaders } from "./utils";
 
 export const handlers = [
@@ -12,4 +13,5 @@ export const handlers = [
     }),
     ...locationHandlers,
     ...userHandlers,
+    ...authHandlers,
 ];

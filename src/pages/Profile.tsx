@@ -263,16 +263,16 @@ export default function Profile() {
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-2xl">
                     {[
-                      { code: 'en', label: 'English', flag: '🇬🇧' },
-                      { code: 'fr', label: 'Français', flag: '🇫🇷' },
-                      { code: 'kiny', label: 'Kinyarwanda', flag: '🇷🇼' }
+                      { code: 'en', label: 'English', flagUrl: 'https://flagcdn.com/gb.svg' },
+                      { code: 'fr', label: 'Français', flagUrl: 'https://flagcdn.com/fr.svg' },
+                      { code: 'kiny', label: 'Kinyarwanda', flagUrl: 'https://flagcdn.com/rw.svg' }
                     ].map((lang) => {
                       const isActive = i18n.language === lang.code;
                       return (
                         <button 
                           key={lang.code}
                           onClick={() => i18n.changeLanguage(lang.code)}
-                          className={`relative p-4 rounded-2xl transition-all duration-300 text-left border flex flex-col gap-2 overflow-hidden ${
+                          className={`relative p-4 rounded-2xl transition-all duration-300 text-left border flex flex-col gap-3 overflow-hidden ${
                             isActive 
                               ? 'border-brand bg-brand/5 shadow-sm shadow-brand/10' 
                               : 'border-gray-100 dark:border-[#1F2937] bg-white dark:bg-[#111827] hover:border-brand/30 hover:shadow-sm'
@@ -283,8 +283,10 @@ export default function Profile() {
                               <FiCheck size={18} />
                             </div>
                           )}
-                          <span className="text-2xl">{lang.flag}</span>
-                          <span className={`text-sm font-semibold ${isActive ? 'text-brand dark:text-white' : 'text-gray-700 dark:text-gray-300'}`}>
+                          <div className="w-8 h-8 rounded-full overflow-hidden shadow-sm shrink-0">
+                            <img src={lang.flagUrl} alt={`${lang.label} flag`} className="w-full h-full object-cover" />
+                          </div>
+                          <span className={`text-sm font-semibold mt-1 ${isActive ? 'text-brand dark:text-white' : 'text-gray-700 dark:text-gray-300'}`}>
                             {lang.label}
                           </span>
                         </button>

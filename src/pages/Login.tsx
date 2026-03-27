@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useLogin } from "../hooks/useAuth";
-import { FiMail, FiLock, FiLoader } from "react-icons/fi";
+import { FiMail, FiPhone, FiLock, FiLoader } from "react-icons/fi";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -64,7 +65,9 @@ const Login = () => {
           <div className="group relative">
             <label className={`block text-xs font-bold mb-2 transition-colors ${fieldErrors.identifier ? 'text-red-500' : 'text-gray-500 dark:text-gray-400 group-focus-within:text-brand'}`}>Phone or Email</label>
             <div className="relative">
-              <span className={`absolute left-4 top-1/2 -translate-y-1/2 transition-colors ${fieldErrors.identifier ? 'text-red-400' : 'text-gray-400 group-focus-within:text-brand'}`}><FiMail size={18} /></span>
+              <span className={`absolute left-4 top-1/2 -translate-y-1/2 transition-colors ${fieldErrors.identifier ? 'text-red-400' : 'text-gray-400 group-focus-within:text-brand'}`}>
+                {formData.identifier.includes('@') ? <FiMail size={18} /> : <FiPhone size={18} />}
+              </span>
               <input 
                 type="text" 
                 value={formData.identifier} 

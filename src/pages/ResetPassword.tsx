@@ -11,6 +11,11 @@ const ResetPassword = () => {
   const { mutate, isPending, isSuccess } = useResetPassword();
   const [passwords, setPasswords] = useState({ new_password: "", confirm_password: "" });
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+  const clearFieldError = (field: string) => {
+    if (fieldErrors[field]) setFieldErrors({ ...fieldErrors, [field]: "" });
+  };
 
   if (!token) {
     return (
@@ -25,14 +30,20 @@ const ResetPassword = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!passwords.new_password) {
-      setError("* Password is required");
+    const errors: Record<string, string> = {};
+
+    if (!passwords.new_password) errors.new_password = "Password is required";
+    else if (passwords.new_password.length < 6) errors.new_password = "Minimum 6 characters";
+
+    if (!passwords.confirm_password) errors.confirm_password = "Confirm your password";
+    else if (passwords.new_password !== passwords.confirm_password) errors.confirm_password = "Passwords do not match";
+
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      setError("Please fix the errors below.");
       return;
     }
-    if (passwords.new_password !== passwords.confirm_password) {
-      setError("* Passwords do not match");
-      return;
-    }
+    setFieldErrors({});
     setError("");
     mutate({ token, new_password: passwords.new_password });
   };
@@ -64,19 +75,21 @@ const ResetPassword = () => {
               {error && <div className="bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 px-4 py-3 rounded-xl text-sm font-medium border border-red-100 dark:border-red-500/20">{error}</div>}
 
               <div className="group relative">
-                <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-2 transition-colors group-focus-within:text-brand">New Password</label>
+                <label className={`block text-xs font-bold mb-2 transition-colors ${fieldErrors.new_password ? 'text-red-500' : 'text-gray-500 dark:text-gray-400 group-focus-within:text-brand'}`}>New Password</label>
                 <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-brand transition-colors"><FiLock size={18} /></span>
-                  <input type="password" value={passwords.new_password} onChange={e => setPasswords({...passwords, new_password: e.target.value})} placeholder="••••••••" className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-[#1F2937]/50 text-gray-900 dark:text-white focus:bg-white dark:focus:bg-[#1F2937] focus:border-brand focus:ring-4 focus:ring-brand/10 transition-all outline-none" />
+                  <span className={`absolute left-4 top-1/2 -translate-y-1/2 transition-colors ${fieldErrors.new_password ? 'text-red-400' : 'text-gray-400 group-focus-within:text-brand'}`}><FiLock size={18} /></span>
+                  <input type="password" value={passwords.new_password} onChange={e => { setPasswords({...passwords, new_password: e.target.value}); clearFieldError('new_password'); }} placeholder="••••••••" className={`w-full pl-11 pr-4 py-3.5 rounded-xl border bg-gray-50 dark:bg-[#1F2937]/50 text-gray-900 dark:text-white focus:bg-white dark:focus:bg-[#1F2937] transition-all outline-none ${fieldErrors.new_password ? 'border-red-400 focus:border-red-500 focus:ring-4 focus:ring-red-500/10' : 'border-gray-200 dark:border-white/10 focus:border-brand focus:ring-4 focus:ring-brand/10'}`} />
                 </div>
+                {fieldErrors.new_password && <span className="absolute -bottom-5 left-1 text-[11px] font-bold text-red-500">{fieldErrors.new_password}</span>}
               </div>
 
-              <div className="group relative">
-                <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-2 transition-colors group-focus-within:text-brand">Confirm Password</label>
+              <div className="group relative pt-2">
+                <label className={`block text-xs font-bold mb-2 transition-colors ${fieldErrors.confirm_password ? 'text-red-500' : 'text-gray-500 dark:text-gray-400 group-focus-within:text-brand'}`}>Confirm Password</label>
                 <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-brand transition-colors"><FiLock size={18} /></span>
-                  <input type="password" value={passwords.confirm_password} onChange={e => setPasswords({...passwords, confirm_password: e.target.value})} placeholder="••••••••" className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-[#1F2937]/50 text-gray-900 dark:text-white focus:bg-white dark:focus:bg-[#1F2937] focus:border-brand focus:ring-4 focus:ring-brand/10 transition-all outline-none" />
+                  <span className={`absolute left-4 top-1/2 -translate-y-1/2 transition-colors ${fieldErrors.confirm_password ? 'text-red-400' : 'text-gray-400 group-focus-within:text-brand'}`}><FiLock size={18} /></span>
+                  <input type="password" value={passwords.confirm_password} onChange={e => { setPasswords({...passwords, confirm_password: e.target.value}); clearFieldError('confirm_password'); }} placeholder="••••••••" className={`w-full pl-11 pr-4 py-3.5 rounded-xl border bg-gray-50 dark:bg-[#1F2937]/50 text-gray-900 dark:text-white focus:bg-white dark:focus:bg-[#1F2937] transition-all outline-none ${fieldErrors.confirm_password ? 'border-red-400 focus:border-red-500 focus:ring-4 focus:ring-red-500/10' : 'border-gray-200 dark:border-white/10 focus:border-brand focus:ring-4 focus:ring-brand/10'}`} />
                 </div>
+                {fieldErrors.confirm_password && <span className="absolute -bottom-5 left-1 text-[11px] font-bold text-red-500">{fieldErrors.confirm_password}</span>}
               </div>
 
               <button type="submit" disabled={isPending} className={`w-full bg-brand text-white py-4 rounded-xl font-bold shadow-md hover:shadow-lg hover:shadow-brand/30 transition-all mt-6 flex justify-center items-center gap-2 ${isPending ? 'opacity-80' : 'hover:-translate-y-0.5 active:scale-[0.98]'}`}>

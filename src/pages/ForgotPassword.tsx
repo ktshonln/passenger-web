@@ -1,19 +1,41 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useForgotPassword } from "../hooks/useAuth";
-import { FiMail, FiLoader, FiArrowLeft, FiCheckCircle } from "react-icons/fi";
+import { FiMail, FiPhone, FiLoader, FiArrowLeft, FiCheckCircle } from "react-icons/fi";
 
 const ForgotPassword = () => {
   const { mutate, isPending, isSuccess } = useForgotPassword();
   const [identifier, setIdentifier] = useState("");
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+  const clearFieldError = (field: string) => {
+    if (fieldErrors[field]) setFieldErrors({ ...fieldErrors, [field]: "" });
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const errors: Record<string, string> = {};
+    const phoneRegex = /^(\+2507|07)\d{8}$/;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
     if (!identifier) {
-      setError("* Identifier required");
+      errors.identifier = "Phone or email required";
+    } else {
+      const cleanInput = identifier.replace(/\s/g, "");
+      const isPhone = phoneRegex.test(cleanInput);
+      const isEmail = emailRegex.test(cleanInput);
+      if (!isPhone && !isEmail) {
+        errors.identifier = "Invalid phone or email format";
+      }
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      setError("Please fix the errors below.");
       return;
     }
+    setFieldErrors({});
     setError("");
     mutate({ identifier });
   };
@@ -45,17 +67,20 @@ const ForgotPassword = () => {
             {error && <div className="bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 px-4 py-3 rounded-xl text-sm font-medium border border-red-100 dark:border-red-500/20">{error}</div>}
 
             <div className="group relative">
-              <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-2 transition-colors group-focus-within:text-brand">Phone or Email</label>
+              <label className={`block text-xs font-bold mb-2 transition-colors ${fieldErrors.identifier ? 'text-red-500' : 'text-gray-500 dark:text-gray-400 group-focus-within:text-brand'}`}>Phone or Email</label>
               <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-brand transition-colors"><FiMail size={18} /></span>
+                <span className={`absolute left-4 top-1/2 -translate-y-1/2 transition-colors ${fieldErrors.identifier ? 'text-red-400' : 'text-gray-400 group-focus-within:text-brand'}`}>
+                  {identifier.includes('@') ? <FiMail size={18} /> : <FiPhone size={18} />}
+                </span>
                 <input 
                   type="text" 
                   value={identifier} 
-                  onChange={e => setIdentifier(e.target.value)}
-                  placeholder="0781234567 or email@domain.com"
-                  className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-[#1F2937]/50 text-gray-900 dark:text-white focus:bg-white dark:focus:bg-[#1F2937] focus:border-brand focus:ring-4 focus:ring-brand/10 transition-all outline-none" 
+                  onChange={e => { setIdentifier(e.target.value); clearFieldError('identifier'); }}
+                  placeholder="0781234567 or email"
+                  className={`w-full pl-11 pr-4 py-3.5 rounded-xl border bg-gray-50 dark:bg-[#1F2937]/50 text-gray-900 dark:text-white focus:bg-white dark:focus:bg-[#1F2937] transition-all outline-none ${fieldErrors.identifier ? 'border-red-400 focus:border-red-500 focus:ring-4 focus:ring-red-500/10' : 'border-gray-200 dark:border-white/10 focus:border-brand focus:ring-4 focus:ring-brand/10'}`} 
                 />
               </div>
+              {fieldErrors.identifier && <span className="absolute -bottom-5 left-1 text-[11px] font-bold text-red-500">{fieldErrors.identifier}</span>}
             </div>
 
             <button 

@@ -32,8 +32,8 @@ const MainLayout = () => {
   }, []);
 
   return (
-    <div className={`min-h-screen flex flex-col font-inter transition-colors duration-300 ${isHome ? 'bg-gradient-to-br from-brand to-[#1E99FF] text-white' : 'bg-[#F8FAFC] dark:bg-[#0B1120] text-gray-900 dark:text-gray-100'}`}>
-      <header className={`sticky top-0 z-50 transition-all duration-300 ${isHome ? 'bg-transparent text-white' : 'bg-white/80 dark:bg-[#111827]/80 backdrop-blur-xl border-b border-gray-100 dark:border-white/5 shadow-sm'}`}>
+    <div className={`overflow-x-hidden min-h-screen flex flex-col font-inter transition-colors duration-300 ${isHome ? 'bg-gradient-to-br from-brand to-[#1E99FF] text-white' : 'bg-[#F8FAFC] dark:bg-[#0B1120] text-gray-900 dark:text-gray-100'}`}>
+      <header className={`sticky top-0 z-50 transition-all duration-300 border-b ${isHome ? 'bg-white/0 text-white border-white/0 shadow-none backdrop-blur-none' : 'bg-white/80 dark:bg-[#111827]/80 backdrop-blur-xl border-gray-100 dark:border-white/5 shadow-sm'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-24">
             {/* Logo */}
@@ -42,10 +42,7 @@ const MainLayout = () => {
                 {isHome ? (
                   <img src="/Logo_white.svg" alt="Katisha Logo" className="h-[30px] sm:h-[45px] w-auto transition-transform group-hover:scale-[1.03]" />
                 ) : (
-                  <>
-                    <img src="/Logo.svg" alt="Katisha Logo" className="h-[30px] sm:h-[45px] w-auto dark:hidden transition-transform group-hover:scale-[1.03]" />
-                    <img src="/Logo_white.svg" alt="Katisha Logo" className="h-[30px] sm:h-[45px] w-auto hidden dark:block transition-transform group-hover:scale-[1.03]" />
-                  </>
+                  <img src="/Logo.svg" alt="Katisha Logo" className="h-[30px] sm:h-[45px] w-auto transition-transform group-hover:scale-[1.03]" />
                 )}
               </Link>
             </div>
@@ -125,10 +122,10 @@ const MainLayout = () => {
                 </div>
               ) : (
                 <div className={`hidden sm:flex items-center gap-1 sm:gap-3 ml-2 sm:ml-4 border-l pl-4 sm:pl-6 ${isHome ? 'border-white/20' : 'border-gray-200 dark:border-white/10'}`}>
-                  <Link to="/login" className={`text-sm px-4 py-1.5 rounded-[2rem] font-semibold transition-all border ${isHome ? 'text-white border-transparent hover:border-white' : 'text-gray-700 dark:text-gray-300 border-transparent hover:border-gray-300'}`}>
+                  <Link to="/login" className={`text-sm px-4 py-2 rounded-[2rem] font-semibold transition-all border ${isHome ? 'text-white border-transparent hover:border-white' : 'text-gray-700 dark:text-gray-300 border-transparent hover:border-gray-300'}`}>
                     {t('login', 'Login')}
                   </Link>
-                  <Link to="/signup" className={`text-sm font-semibold px-6 py-1.5 rounded-[2rem] hover:-translate-y-0.5 transition-all hover:shadow-md active:scale-95 border ${isHome ? 'bg-white text-[#0E8BF1] border-white hover:shadow-black/10' : 'bg-brand text-white hover:bg-brand/90 border-brand hover:shadow-brand/20'}`}>
+                  <Link to="/signup" className={`text-sm font-semibold px-6 py-2 rounded-[2rem] hover:-translate-y-0.5 transition-all hover:shadow-md active:scale-95 border ${isHome ? 'bg-white text-[#0E8BF1] border-white hover:shadow-black/10' : 'bg-brand text-white hover:bg-brand/90 border-brand hover:shadow-brand/20'}`}>
                     {t('signup', 'Signup')}
                   </Link>
                 </div>

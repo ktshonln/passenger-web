@@ -3,23 +3,20 @@ import { AiOutlineSearch } from "react-icons/ai";
 import { MdOutlineLocationOn } from "react-icons/md";
 import useLocations from "../hooks/useLocations";
 import { BsTicketFill } from "react-icons/bs";
-
-// Minimal Ticket SVG for the floating background pattern
-const TicketIcon = ({ className }: { className?: string }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="currentColor">
-    <path d="M22 10V6A2 2 0 0 0 20 4H4A2 2 0 0 0 2 6V10C3.11 10 4 10.9 4 12C4 13.1 3.11 14 2 14V18A2 2 0 0 0 4 20H20A2 2 0 0 0 22 18V14C20.9 14 20 13.1 20 12C20 10.9 20.9 10 22 10Z" />
-  </svg>
-);
+import LogoName from "../components/LogoName";
 
 function Home() {
   const [query, setQuery] = useState("");
   const [isFocused, setIsFocused] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const { data: BUS_ROUTES } = useLocations();
 
   // Close dropdown when clicking outside
   useEffect(() => {
+    setMounted(true); // Trigger fade-in for background vectors
+
     function handleClickOutside(event: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsFocused(false);
@@ -34,11 +31,11 @@ function Home() {
   // Filter routes based on query using smart tokenized matching
   const filteredSuggestions = (query.trim() !== ""
     ? BUS_ROUTES?.pages.flat().filter((route) => {
-        const searchTokens = query.toLowerCase().trim().split(/\s+/);
-        const routeLower = route.toLowerCase();
-        // Route must contain every typed word regardless of exact formatting or order
-        return searchTokens.every(token => routeLower.includes(token));
-      })
+      const searchTokens = query.toLowerCase().trim().split(/\s+/);
+      const routeLower = route.toLowerCase();
+      // Route must contain every typed word regardless of exact formatting or order
+      return searchTokens.every(token => routeLower.includes(token));
+    })
     : []) ?? [];
 
   const showDropdown = isFocused && query.trim() !== "";
@@ -52,7 +49,7 @@ function Home() {
     <div className="flex-1 flex flex-col justify-center items-center px-4 relative z-20">
 
       {/* Decorative Floating Tickets matching the mockup aesthetic */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
+      <div className={`absolute inset-0 pointer-events-none overflow-hidden z-0 transition-all duration-[1200ms] ease-out ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-12 sm:translate-x-24'}`}>
         <BsTicketFill className="hidden md:block absolute top-[20%] right-[25%] w-32 h-32 text-[#289CFD] rotate-12" />
         <BsTicketFill className="absolute top-[15%] left-[10%] w-16 h-16 md:w-24 md:h-24 text-[#289CFD] rotate-12 opacity-50 md:opacity-100" />
         <BsTicketFill className="absolute bottom-[25%] left-[20%] w-24 h-24 md:w-40 md:h-40 text-[#289CFD] rotate-6 opacity-30 md:opacity-100" />
@@ -63,11 +60,7 @@ function Home() {
       </div>
 
       <div className="w-full max-w-3xl flex flex-col items-center relative z-10">
-        <img
-          src="/Logo_name_white.svg"
-          alt="Katisha"
-          className="w-48 sm:w-56 mb-5"
-        />
+        <LogoName className="w-48 sm:w-52 h-full mb-5 text-white" />
 
         <div
           ref={dropdownRef}

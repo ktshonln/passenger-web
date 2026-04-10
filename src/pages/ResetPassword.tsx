@@ -1,28 +1,40 @@
-import { useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
-import { useResetPassword } from "../hooks/useAuth";
-import { FiLock, FiLoader, FiCheckCircle } from "react-icons/fi";
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { useResetPassword, useForgotPassword } from "../hooks/useAuth";
+import { FiLock, FiLoader, FiCheckCircle, FiEyeOff, FiEye } from "react-icons/fi";
 
 const ResetPassword = () => {
-  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const token = searchParams.get("token");
+  const location = useLocation();
+  const identifier = location.state?.identifier || "";
   
   const { mutate, isPending, isSuccess } = useResetPassword();
-  const [passwords, setPasswords] = useState({ new_password: "", confirm_password: "" });
+  const { mutate: resendOtp, isPending: isResending } = useForgotPassword();
+  const [passwords, setPasswords] = useState({ otp: "", new_password: "", confirm_password: "" });
   const [error, setError] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  
+  const [timer, setTimer] = useState(60);
+  const [showPassword, setShowPassword] = useState(false);
+
+  useEffect(() => {
+    let interval: any;
+    if (timer > 0 && !isSuccess) {
+      interval = setInterval(() => setTimer(t => t - 1), 1000);
+    }
+    return () => clearInterval(interval);
+  }, [timer, isSuccess]);
 
   const clearFieldError = (field: string) => {
     if (fieldErrors[field]) setFieldErrors({ ...fieldErrors, [field]: "" });
   };
 
-  if (!token) {
+  if (!identifier) {
     return (
       <div className="min-h-[85vh] flex items-center justify-center p-4">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Invalid Reset Link</h2>
-          <p className="text-gray-500 dark:text-gray-400">Please request a new password reset email.</p>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Missing Context</h2>
+          <p className="text-gray-500 dark:text-gray-400">Please begin the reset process from the forgot password page.</p>
         </div>
       </div>
     );
@@ -31,6 +43,8 @@ const ResetPassword = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const errors: Record<string, string> = {};
+
+    if (!passwords.otp || passwords.otp.length < 6) errors.otp = "6-digit OTP required";
 
     if (!passwords.new_password) errors.new_password = "Password is required";
     else if (passwords.new_password.length < 6) errors.new_password = "Minimum 6 characters";
@@ -45,7 +59,11 @@ const ResetPassword = () => {
     }
     setFieldErrors({});
     setError("");
-    mutate({ token, new_password: passwords.new_password });
+    mutate({ identifier, otp: passwords.otp, new_password: passwords.new_password });
+  };
+
+  const handleResend = () => {
+    resendOtp({ identifier }, { onSuccess: () => setTimer(60) });
   };
 
   return (
@@ -67,18 +85,34 @@ const ResetPassword = () => {
         ) : (
           <>
             <div className="text-center mb-10">
-              <h2 className="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight mb-2">Create New Password</h2>
-              <p className="text-gray-500 dark:text-gray-400">Choose a strong new password for your account.</p>
+              <h2 className="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight mb-2">Verify & Reset</h2>
+              <p className="text-gray-500 dark:text-gray-400">We've sent an OTP code to {identifier}</p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-5">
               {error && <div className="bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 px-4 py-3 rounded-xl text-sm font-medium border border-red-100 dark:border-red-500/20">{error}</div>}
-
+              
               <div className="group relative">
+                <label className={`block text-xs font-bold mb-2 transition-colors ${fieldErrors.otp ? 'text-red-500' : 'text-gray-500 dark:text-gray-400 group-focus-within:text-brand'}`}>OTP Code</label>
+                <input 
+                  type="text" 
+                  value={passwords.otp} 
+                  onChange={e => { setPasswords({...passwords, otp: e.target.value}); clearFieldError('otp'); }} 
+                  placeholder="000000" 
+                  maxLength={6}
+                  className={`w-full px-4 py-4 text-center tracking-widest text-xl rounded-xl border bg-gray-50 dark:bg-[#1F2937]/50 text-gray-900 dark:text-white focus:bg-white dark:focus:bg-[#1F2937] transition-all outline-none ${fieldErrors.otp ? 'border-red-400 focus:border-red-500 focus:ring-4 focus:ring-red-500/10' : 'border-gray-200 dark:border-white/10 focus:border-brand focus:ring-4 focus:ring-brand/10'}`} 
+                />
+                {fieldErrors.otp && <span className="absolute -bottom-5 left-1 text-[11px] font-bold text-red-500">{fieldErrors.otp}</span>}
+              </div>
+
+              <div className="group relative pt-2">
                 <label className={`block text-xs font-bold mb-2 transition-colors ${fieldErrors.new_password ? 'text-red-500' : 'text-gray-500 dark:text-gray-400 group-focus-within:text-brand'}`}>New Password</label>
                 <div className="relative">
                   <span className={`absolute left-4 top-1/2 -translate-y-1/2 transition-colors ${fieldErrors.new_password ? 'text-red-400' : 'text-gray-400 group-focus-within:text-brand'}`}><FiLock size={18} /></span>
-                  <input type="password" value={passwords.new_password} onChange={e => { setPasswords({...passwords, new_password: e.target.value}); clearFieldError('new_password'); }} placeholder="••••••••" className={`w-full pl-11 pr-4 py-3.5 rounded-xl border bg-gray-50 dark:bg-[#1F2937]/50 text-gray-900 dark:text-white focus:bg-white dark:focus:bg-[#1F2937] transition-all outline-none ${fieldErrors.new_password ? 'border-red-400 focus:border-red-500 focus:ring-4 focus:ring-red-500/10' : 'border-gray-200 dark:border-white/10 focus:border-brand focus:ring-4 focus:ring-brand/10'}`} />
+                  <input type={showPassword ? "text" : "password"} value={passwords.new_password} onChange={e => { setPasswords({...passwords, new_password: e.target.value}); clearFieldError('new_password'); }} placeholder="••••••••" className={`w-full pl-11 pr-12 py-3.5 rounded-xl border bg-gray-50 dark:bg-[#1F2937]/50 text-gray-900 dark:text-white focus:bg-white dark:focus:bg-[#1F2937] transition-all outline-none ${fieldErrors.new_password ? 'border-red-400 focus:border-red-500 focus:ring-4 focus:ring-red-500/10' : 'border-gray-200 dark:border-white/10 focus:border-brand focus:ring-4 focus:ring-brand/10'}`} />
+                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                    {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
+                  </button>
                 </div>
                 {fieldErrors.new_password && <span className="absolute -bottom-5 left-1 text-[11px] font-bold text-red-500">{fieldErrors.new_password}</span>}
               </div>
@@ -87,7 +121,7 @@ const ResetPassword = () => {
                 <label className={`block text-xs font-bold mb-2 transition-colors ${fieldErrors.confirm_password ? 'text-red-500' : 'text-gray-500 dark:text-gray-400 group-focus-within:text-brand'}`}>Confirm Password</label>
                 <div className="relative">
                   <span className={`absolute left-4 top-1/2 -translate-y-1/2 transition-colors ${fieldErrors.confirm_password ? 'text-red-400' : 'text-gray-400 group-focus-within:text-brand'}`}><FiLock size={18} /></span>
-                  <input type="password" value={passwords.confirm_password} onChange={e => { setPasswords({...passwords, confirm_password: e.target.value}); clearFieldError('confirm_password'); }} placeholder="••••••••" className={`w-full pl-11 pr-4 py-3.5 rounded-xl border bg-gray-50 dark:bg-[#1F2937]/50 text-gray-900 dark:text-white focus:bg-white dark:focus:bg-[#1F2937] transition-all outline-none ${fieldErrors.confirm_password ? 'border-red-400 focus:border-red-500 focus:ring-4 focus:ring-red-500/10' : 'border-gray-200 dark:border-white/10 focus:border-brand focus:ring-4 focus:ring-brand/10'}`} />
+                  <input type={showPassword ? "text" : "password"} value={passwords.confirm_password} onChange={e => { setPasswords({...passwords, confirm_password: e.target.value}); clearFieldError('confirm_password'); }} placeholder="••••••••" className={`w-full pl-11 pr-12 py-3.5 rounded-xl border bg-gray-50 dark:bg-[#1F2937]/50 text-gray-900 dark:text-white focus:bg-white dark:focus:bg-[#1F2937] transition-all outline-none ${fieldErrors.confirm_password ? 'border-red-400 focus:border-red-500 focus:ring-4 focus:ring-red-500/10' : 'border-gray-200 dark:border-white/10 focus:border-brand focus:ring-4 focus:ring-brand/10'}`} />
                 </div>
                 {fieldErrors.confirm_password && <span className="absolute -bottom-5 left-1 text-[11px] font-bold text-red-500">{fieldErrors.confirm_password}</span>}
               </div>
@@ -97,6 +131,14 @@ const ResetPassword = () => {
                 {isPending ? "Updating..." : "Reset Password"}
               </button>
             </form>
+            
+            <div className="text-center text-sm font-medium mt-6">
+              {timer > 0 ? (
+                <p className="text-gray-500 dark:text-gray-400">Resend code in <span className="font-bold text-gray-900 dark:text-white">{timer}s</span></p>
+              ) : (
+                <p className="text-gray-500 dark:text-gray-400">Didn't receive the code? <button type="button" onClick={handleResend} disabled={isResending} className="text-brand font-bold hover:underline ml-1">Resend</button></p>
+              )}
+            </div>
           </>
         )}
       </div>

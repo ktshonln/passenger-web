@@ -158,20 +158,33 @@ export const authHandlers = [
   }),
 
   // Forgot Password
-  http.post(`${baseUrl}/auth/forgot-password`, async () => {
+  http.post(`${baseUrl}/auth/forgot-password`, async ({ request }) => {
     await delay(600);
-    return HttpResponse.json({ message: "If an account with that identifier exists, a recovery link has been sent." });
+    const body = await request.json() as any;
+    const user = usersDb.find(u => u.phone_number === body.identifier || u.email === body.identifier);
+    if (user) otps[user.id] = "123456";
+    return HttpResponse.json({ message: "If an account with that identifier exists, an OTP has been sent." });
   }),
 
   // Reset Password
   http.post(`${baseUrl}/auth/reset-password`, async ({ request }) => {
     await delay(600);
     const body = await request.json() as any;
-    if (!body.token || !body.new_password) {
-      return new HttpResponse(JSON.stringify({ message: "Token and new password required" }), { status: 400 });
+    if (!body.identifier || !body.otp || !body.new_password) {
+      return new HttpResponse(JSON.stringify({ message: "Identifier, OTP, and new password required" }), { status: 400 });
     }
-    // Simulation logic handles successfully updating password across DB if implemented, omitted for basic mock.
-    return HttpResponse.json({ message: "Password updated. Please log in again." });
+    const user = usersDb.find(u => u.phone_number === body.identifier || u.email === body.identifier);
+    if (!user || user.status === "pending_verification") return new HttpResponse(JSON.stringify({ message: "Invalid user." }), { status: 400 });
+    
+    const validOtp = otps[user.id];
+    if (!validOtp || validOtp !== body.otp) {
+        return new HttpResponse(JSON.stringify({ message: "Invalid OTP! Using '123456'." }), { status: 400 });
+    }
+
+    delete otps[user.id];
+    user.password = body.new_password;
+
+    return HttpResponse.json({ message: "Password updated successfully" });
   }),
 
   // Logout

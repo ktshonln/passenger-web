@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useLogin, useVerifyLogin, useVerify2FA, useResendOtp } from "../hooks/useAuth";
-import { FiMail, FiPhone, FiLock, FiLoader } from "react-icons/fi";
+import { FiMail, FiPhone, FiLock, FiLoader, FiEye, FiEyeOff } from "react-icons/fi";
+
+const flags: Record<string, string> = { "+250": "rw", "+254": "ke", "+256": "ug", "+255": "tz" };
 
 const Login = () => {
   const navigate = useNavigate();
@@ -16,6 +18,7 @@ const Login = () => {
   const [timer, setTimer] = useState(60);
   const [userId, setUserId] = useState<string>("");
   const [requires2FA, setRequires2FA] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   
   const [countryCode, setCountryCode] = useState("+250");
   
@@ -143,16 +146,22 @@ const Login = () => {
                     {formData.identifier.includes('@') ? <FiMail size={18} /> : <FiPhone size={18} />}
                   </span>
                   {!/[a-zA-Z@]/.test(formData.identifier) && (
-                    <select
-                      value={countryCode}
-                      onChange={(e) => setCountryCode(e.target.value)}
-                      className="absolute left-10 top-0 bottom-0 bg-transparent border-none outline-none text-sm text-gray-700 dark:text-gray-200 z-10 font-semibold appearance-none pl-1 pr-6 cursor-pointer"
-                    >
-                      <option value="+250">🇷🇼 +250</option>
-                      <option value="+254">🇰🇪 +254</option>
-                      <option value="+256">🇺🇬 +256</option>
-                      <option value="+255">🇹🇿 +255</option>
-                    </select>
+                    <>
+                      <div className="absolute left-11 flex items-center gap-1.5 z-10 cursor-pointer pointer-events-none top-1/2 -translate-y-1/2">
+                        <img src={`https://flagcdn.com/${flags[countryCode]}.svg`} alt="flag" className="w-[18px] h-[13px] rounded-[2px] object-cover shadow-sm" />
+                        <span className="text-sm font-semibold text-gray-700 dark:text-gray-200">{countryCode}</span>
+                      </div>
+                      <select
+                        value={countryCode}
+                        onChange={(e) => setCountryCode(e.target.value)}
+                        className="absolute left-10 w-[5rem] top-0 bottom-0 bg-transparent border-none outline-none opacity-0 z-20 cursor-pointer"
+                      >
+                        <option value="+250">Rwanda (+250)</option>
+                        <option value="+254">Kenya (+254)</option>
+                        <option value="+256">Uganda (+256)</option>
+                        <option value="+255">Tanzania (+255)</option>
+                      </select>
+                    </>
                   )}
                   <input 
                     type="text" 
@@ -162,8 +171,8 @@ const Login = () => {
                       setFormData({ ...formData, identifier: val }); 
                       clearFieldError('identifier'); 
                     }}
-                    placeholder="780 000 000 or email"
-                    className={`w-full ${/[a-zA-Z@]/.test(formData.identifier) ? 'pl-11' : 'pl-32'} pr-4 py-3.5 rounded-xl border bg-gray-50 dark:bg-[#1F2937]/50 text-gray-900 dark:text-white focus:bg-white dark:focus:bg-[#1F2937] transition-all outline-none ${fieldErrors.identifier ? 'border-red-400 focus:border-red-500 focus:ring-4 focus:ring-red-500/10' : 'border-gray-200 dark:border-white/10 focus:border-brand focus:ring-4 focus:ring-brand/10'}`}
+                    placeholder="781 234 567 or email"
+                    className={`w-full ${/[a-zA-Z@]/.test(formData.identifier) ? 'pl-11' : 'pl-[7.5rem]'} pr-4 py-3.5 rounded-xl border bg-gray-50 dark:bg-[#1F2937]/50 text-gray-900 dark:text-white focus:bg-white dark:focus:bg-[#1F2937] transition-all outline-none ${fieldErrors.identifier ? 'border-red-400 focus:border-red-500 focus:ring-4 focus:ring-red-500/10' : 'border-gray-200 dark:border-white/10 focus:border-brand focus:ring-4 focus:ring-brand/10'}`}
                   />
                 </div>
                 {fieldErrors.identifier && <span className="absolute -bottom-5 left-1 text-[11px] font-bold text-red-500">{fieldErrors.identifier}</span>}
@@ -177,12 +186,15 @@ const Login = () => {
                 <div className="relative">
                   <span className={`absolute left-4 top-1/2 -translate-y-1/2 transition-colors ${fieldErrors.password ? 'text-red-400' : 'text-gray-400 group-focus-within:text-brand'}`}><FiLock size={18} /></span>
                   <input 
-                    type="password" 
+                    type={showPassword ? "text" : "password"} 
                     value={formData.password} 
                     onChange={e => { setFormData({ ...formData, password: e.target.value }); clearFieldError('password'); }}
                     placeholder="••••••••"
-                    className={`w-full pl-11 pr-4 py-3.5 rounded-xl border bg-gray-50 dark:bg-[#1F2937]/50 text-gray-900 dark:text-white focus:bg-white dark:focus:bg-[#1F2937] transition-all outline-none ${fieldErrors.password ? 'border-red-400 focus:border-red-500 focus:ring-4 focus:ring-red-500/10' : 'border-gray-200 dark:border-white/10 focus:border-brand focus:ring-4 focus:ring-brand/10'}`}
+                    className={`w-full pl-11 pr-12 py-3.5 rounded-xl border bg-gray-50 dark:bg-[#1F2937]/50 text-gray-900 dark:text-white focus:bg-white dark:focus:bg-[#1F2937] transition-all outline-none ${fieldErrors.password ? 'border-red-400 focus:border-red-500 focus:ring-4 focus:ring-red-500/10' : 'border-gray-200 dark:border-white/10 focus:border-brand focus:ring-4 focus:ring-brand/10'}`}
                   />
+                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
+                    {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
+                  </button>
                 </div>
                  {fieldErrors.password && <span className="absolute -bottom-5 left-1 text-[11px] font-bold text-red-500">{fieldErrors.password}</span>}
               </div>

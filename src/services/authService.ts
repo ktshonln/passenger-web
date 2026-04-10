@@ -27,7 +27,8 @@ export interface ResendOtpPayload {
 }
 
 export interface ResetPasswordPayload {
-  token: string;
+  identifier: string;
+  otp: string;
   new_password: string;
 }
 

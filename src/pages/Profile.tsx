@@ -7,12 +7,14 @@ import TopUp from "../components/TopUp";
 import { useUser, useUpdateUser, useChangePassword } from "../hooks/useUser";
 import userService from "../services/userService";
 import { getCdnUrl } from "../utils/media";
+import { useToastStore } from "../stores/toastStore";
 
 export default function Profile() {
   const { t, i18n } = useTranslation();
   const [activeTab, setActiveTab] = useState("personal");
   const [topUpPrompt, setTopUpPrompt] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { showToast } = useToastStore();
 
   // React Query Hooks
   const { data: user, isLoading } = useUser();
@@ -54,9 +56,12 @@ export default function Profile() {
 
         if (!response.ok) throw new Error("Object storage upload failed.");
 
-        updateUser.mutate({ avatar_path: path });
+        updateUser.mutate({ avatar_path: path }, {
+          onSuccess: () => showToast("Avatar updated successfully!", "success")
+        });
       } catch (err) {
         console.error("Avatar upload failed:", err);
+        showToast("Avatar upload failed. Please check your connection and try again.", "error");
         if (user?.avatar_path) setAvatarPreview(getCdnUrl(user.avatar_path));
         else setAvatarPreview("");
       } finally {

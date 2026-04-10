@@ -12,12 +12,15 @@ axiosInstance.interceptors.response.use(
     (error) => {
         if (error.response) {
             const status = error.response.status;
+            const url = error.config?.url || '';
+            const isAuthReq = url.includes('/auth/');
+
             // Intercept catastrophic system faults (500)
             if (status === 500) {
                 window.location.href = '/500';
             }
-            // Intercept permission zone violations (403)
-            else if (status === 403) {
+            // Intercept permission zone violations (403), except for Auth requests where we want the UI forms to handle the 403 inline (e.g invalid user type).
+            else if (status === 403 && !isAuthReq) {
                 window.location.href = '/403';
             }
         }

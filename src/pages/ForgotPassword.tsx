@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useForgotPassword } from "../hooks/useAuth";
-import { FiMail, FiPhone, FiLoader, FiArrowLeft } from "react-icons/fi";
+import { FiPhone, FiLoader, FiArrowLeft, FiMail } from "react-icons/fi";
 
 const ForgotPassword = () => {
   const navigate = useNavigate();

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useLogin, useVerifyLogin, useVerify2FA, useResendOtp } from "../hooks/useAuth";
-import { FiMail, FiPhone, FiLock, FiLoader, FiEye, FiEyeOff } from "react-icons/fi";
+import { FiPhone, FiLock, FiLoader, FiEye, FiEyeOff, FiMail } from "react-icons/fi";
 
 const flags: Record<string, string> = { "+250": "rw", "+254": "ke", "+256": "ug", "+255": "tz" };
 

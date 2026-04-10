@@ -8,9 +8,11 @@ export const useLogin = () => {
   const showToast = useToastStore(s => s.showToast);
   return useMutation({
     mutationFn: (data: LoginPayload) => authService.login(data),
-    onSuccess: (user) => {
-      queryClient.setQueryData(CACHE_KEY_USER, user);
-      showToast("Successfully logged in!", "success");
+    onSuccess: (res: any) => {
+      if (!res.requires_verification && !res.requires_2fa) {
+        queryClient.setQueryData(CACHE_KEY_USER, res.user);
+        showToast("Successfully logged in!", "success");
+      }
     },
     onError: (err: any) => showToast(err?.response?.data?.message || "Login failed", "error")
   });
@@ -26,13 +28,37 @@ export const useRegister = () => {
 };
 
 export const useVerifyPhone = () => {
-  const queryClient = useQueryClient();
   const showToast = useToastStore(s => s.showToast);
   return useMutation({
     mutationFn: (data: VerifyPhonePayload) => authService.verifyPhone(data),
-    onSuccess: (user) => {
-      queryClient.setQueryData(CACHE_KEY_USER, user);
-      showToast("Phone verified! You are now logged in.", "success");
+    onSuccess: () => {
+      showToast("Phone verified! Please log in.", "success");
+    },
+    onError: (err: any) => showToast(err?.response?.data?.message || "Verification failed", "error")
+  });
+};
+
+export const useVerifyLogin = () => {
+  const queryClient = useQueryClient();
+  const showToast = useToastStore(s => s.showToast);
+  return useMutation({
+    mutationFn: (data: any) => authService.verifyLogin(data),
+    onSuccess: (res: any) => {
+      queryClient.setQueryData(CACHE_KEY_USER, res.user);
+      showToast("Successfully logged in!", "success");
+    },
+    onError: (err: any) => showToast(err?.response?.data?.message || "Verification failed", "error")
+  });
+};
+
+export const useVerify2FA = () => {
+  const queryClient = useQueryClient();
+  const showToast = useToastStore(s => s.showToast);
+  return useMutation({
+    mutationFn: (data: any) => authService.verify2FA(data),
+    onSuccess: (res: any) => {
+      queryClient.setQueryData(CACHE_KEY_USER, res.user);
+      showToast("Successfully logged in!", "success");
     },
     onError: (err: any) => showToast(err?.response?.data?.message || "Verification failed", "error")
   });

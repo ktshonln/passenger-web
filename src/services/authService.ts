@@ -2,14 +2,14 @@ import { axiosInstance } from "./apiClient";
 
 export interface LoginPayload {
   identifier: string; // phone or email
-  password?: string;
+  password: string;
 }
 
 export interface RegisterPayload {
   first_name: string;
   last_name: string;
   phone_number: string;
-  password?: string;
+  password: string;
   email?: string;
 }
 
@@ -35,6 +35,8 @@ export default {
   login: (data: LoginPayload) => axiosInstance.post("/auth/login", data).then(res => res.data),
   register: (data: RegisterPayload) => axiosInstance.post("/auth/register", data).then(res => res.data),
   verifyPhone: (data: VerifyPhonePayload) => axiosInstance.post("/auth/verify-phone", data).then(res => res.data),
+  verifyLogin: (data: any) => axiosInstance.post("/auth/verify-login", data).then(res => res.data),
+  verify2FA: (data: any) => axiosInstance.post("/auth/verify-2fa", data).then(res => res.data),
   resendOtp: (data: ResendOtpPayload) => axiosInstance.post("/auth/resend-otp", data).then(res => res.data),
   forgotPassword: (data: ForgotPasswordPayload) => axiosInstance.post("/auth/forgot-password", data).then(res => res.data),
   resetPassword: (data: ResetPasswordPayload) => axiosInstance.post("/auth/reset-password", data).then(res => res.data),

@@ -22,20 +22,39 @@ export default function Profile() {
   const [passwords, setPasswords] = useState({ current: "", new: "", confirm: "" });
   const [notifications, setNotifications] = useState({ email: true, sms: false });
 
-  // Sync avatar_url from server payload
+  // Sync from server payload
   useEffect(() => {
-    if (user?.avatar_url) {
-      setAvatarPreview(user.avatar_url);
+    if (user?.avatar_path) setAvatarPreview(user.avatar_path);
+    if (user?.notif_channel) {
+       setNotifications({
+          email: user.notif_channel.includes("email"),
+          sms: user.notif_channel.includes("sms")
+       });
     }
-  }, [user?.avatar_url]);
+  }, [user?.avatar_path, user?.notif_channel]);
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      const imgUrl = URL.createObjectURL(e.target.files[0]);
+      const file = e.target.files[0];
+      const imgUrl = URL.createObjectURL(file);
       setAvatarPreview(imgUrl);
-      // Automatically patch avatar_url
-      updateUser.mutate({ avatar_url: imgUrl });
+      
+      // Stub: in reality you would POST to /upload to get an S3 URI.
+      const mockS3Path = `s3://katisha/avatars/${file.name}`;
+      updateUser.mutate({ avatar_path: mockS3Path });
     }
+  };
+
+  const toggleNotif = (type: 'email' | 'sms') => {
+    const next = { ...notifications, [type]: !notifications[type] };
+    setNotifications(next);
+    
+    const channels = [];
+    if (next.email) channels.push("email");
+    if (next.sms) channels.push("sms");
+    if (channels.length === 0) channels.push("none");
+    
+    updateUser.mutate({ notif_channel: channels.join(",") });
   };
 
   const handleProfileSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -44,7 +63,6 @@ export default function Profile() {
     updateUser.mutate({
       first_name: fd.get("first_name") as string,
       last_name: fd.get("last_name") as string,
-      email: fd.get("email") as string,
     });
   };
 
@@ -211,7 +229,7 @@ export default function Profile() {
                     </div>
                   </div>
 
-                  <div className="pt-4">
+                  <div className="pt-4 pb-4 border-b border-gray-100 dark:border-white/5">
                     <button
                       type="submit"
                       disabled={changePassword.isPending}
@@ -221,6 +239,18 @@ export default function Profile() {
                     </button>
                   </div>
                 </form>
+                
+                <div className="max-w-md pt-5 space-y-4">
+                  <div className="flex items-center justify-between p-4 bg-gray-50/50 dark:bg-[#1F2937]/50 rounded-2xl cursor-pointer transition-colors border border-transparent hover:border-gray-200 dark:hover:border-gray-700" onClick={() => updateUser.mutate({ two_factor_enabled: !user?.two_factor_enabled })}>
+                    <div className="pr-4">
+                      <h4 className="font-semibold text-gray-900 dark:text-gray-100 text-sm">Two-Factor Authentication</h4>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Secure your account with an OTP on every login.</p>
+                    </div>
+                    <div className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors duration-300 ${user?.two_factor_enabled ? 'bg-brand' : 'bg-gray-300 dark:bg-gray-600'}`}>
+                      <div className={`bg-white w-4 h-4 rounded-full shadow-sm transform transition-transform duration-300 ${user?.two_factor_enabled ? 'translate-x-6' : 'translate-x-0'}`}></div>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
 
@@ -238,7 +268,7 @@ export default function Profile() {
                         <h4 className="font-semibold text-gray-900 dark:text-gray-100 text-sm">Email Alerts</h4>
                         <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Digital tickets & account updates directly to your inbox.</p>
                       </div>
-                      <div className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors duration-300 ${notifications.email ? 'bg-brand' : 'bg-gray-300 dark:bg-gray-600'}`} onClick={(e) => { e.preventDefault(); setNotifications({ ...notifications, email: !notifications.email }) }}>
+                      <div className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors duration-300 ${notifications.email ? 'bg-brand' : 'bg-gray-300 dark:bg-gray-600'}`} onClick={(e) => { e.preventDefault(); toggleNotif('email') }}>
                         <div className={`bg-white w-4 h-4 rounded-full shadow-sm transform transition-transform duration-300 ${notifications.email ? 'translate-x-6' : 'translate-x-0'}`}></div>
                       </div>
                     </label>
@@ -248,7 +278,7 @@ export default function Profile() {
                         <h4 className="font-semibold text-gray-900 dark:text-gray-100 text-sm">Push & SMS</h4>
                         <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Quick boarding reminders and urgent delay notifications.</p>
                       </div>
-                      <div className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors duration-300 ${notifications.sms ? 'bg-brand' : 'bg-gray-300 dark:bg-gray-600'}`} onClick={(e) => { e.preventDefault(); setNotifications({ ...notifications, sms: !notifications.sms }) }}>
+                      <div className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors duration-300 ${notifications.sms ? 'bg-brand' : 'bg-gray-300 dark:bg-gray-600'}`} onClick={(e) => { e.preventDefault(); toggleNotif('sms') }}>
                         <div className={`bg-white w-4 h-4 rounded-full shadow-sm transform transition-transform duration-300 ${notifications.sms ? 'translate-x-6' : 'translate-x-0'}`}></div>
                       </div>
                     </label>

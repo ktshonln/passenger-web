@@ -7,7 +7,8 @@ export interface MockUser {
   password?: string;
   user_type: string;
   status: string;
-  avatar_url?: string;
+  avatar_path?: string;
+  two_factor_enabled?: boolean;
 }
 
 export const usersDb: MockUser[] = [

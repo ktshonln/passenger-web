@@ -1,0 +1,246 @@
+{
+  "login": {
+    "post": {
+      "tags": [
+        "Auth"
+      ],
+      "summary": "Login with phone or email + password",
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/ClientType"
+        }
+      ],
+      "description": "Accepts a phone number in E.164 format or an email address as `identifier`.\n\n**Normal** → `200` with full `AuthResponse`.\n\n**Account pending verification** → `202` with `{ requires_verification: true, user_id, channel, expires_in }`.\nAn OTP is sent to the channel the user logged in with. Follow up with `POST /auth/verify-login`.\n\n**2FA enabled** → `202` with `{ requires_2fa: true, user_id, expires_in }`.\nAn OTP is sent to the user's phone. Follow up with `POST /auth/verify-2fa`.\n\n**Wrong login channel** → `403` with `PHONE_LOGIN_REQUIRED` or `EMAIL_LOGIN_REQUIRED`\nif the user tries to log in via a channel that is not their `login_channel`.\n\nRate-limited to **5 attempts per 15 min per IP** by default.\nConfigurable via `RATE_LIMIT_LOGIN_MAX` and `RATE_LIMIT_LOGIN_WINDOW_SECONDS`.\n",
+      "security": [],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "required": [
+                "identifier",
+                "password"
+              ],
+              "properties": {
+                "identifier": {
+                  "type": "string",
+                  "example": "+250780000001",
+                  "description": "Phone number (E.164) or email address."
+                },
+                "password": {
+                  "type": "string",
+                  "minLength": 8,
+                  "maxLength": 128
+                },
+                "device_name": {
+                  "type": "string",
+                  "maxLength": 200
+                }
+              }
+            }
+          }
+        }
+      },
+      "responses": {
+        "200": {
+          "description": "Login successful — tokens issued",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuthResponse"
+              }
+            }
+          }
+        },
+        "202": {
+          "description": "2FA required — OTP sent to phone",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "requires_2fa": {
+                    "type": "boolean",
+                    "enum": [
+                      true
+                    ]
+                  },
+                  "user_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "Pass to POST /auth/verify-2fa."
+                  },
+                  "expires_in": {
+                    "type": "integer",
+                    "example": 300,
+                    "description": "OTP TTL in seconds."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "401": {
+          "description": "Invalid credentials",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Error"
+              },
+              "example": {
+                "error": {
+                  "code": "INVALID_CREDENTIALS"
+                }
+              }
+            }
+          }
+        },
+        "403": {
+          "description": "Account suspended (`ACCOUNT_SUSPENDED`) or phone not yet verified (`PHONE_NOT_VERIFIED`)",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Error"
+              }
+            }
+          }
+        },
+        "422": {
+          "$ref": "#/components/responses/UnprocessableEntity"
+        },
+        "429": {
+          "description": "Rate limit exceeded",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Error"
+              },
+              "example": {
+                "error": {
+                  "code": "RATE_LIMIT_EXCEEDED"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "register": {
+    "post": {
+      "tags": [
+        "Auth"
+      ],
+      "summary": "Register a new passenger account",
+      "description": "Creates a `passenger` account in `pending_verification` status.\nOn success, sends **separate** 6-digit OTPs per channel:\n- **Phone OTP** → always sent via SMS (`phone_verification` purpose)\n- **Email OTP** → only if `email` provided, distinct code via email (`email_verification` purpose)\n\nThe account cannot log in until at least one channel is verified.\nThe first channel verified sets `login_channel` and activates the account.\nAfter verifying, call `POST /auth/login` to obtain tokens.\n\nStaff accounts are provisioned via `POST /users/invite` (admin-only flow).\n",
+      "security": [],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "required": [
+                "first_name",
+                "last_name",
+                "phone_number",
+                "password"
+              ],
+              "properties": {
+                "first_name": {
+                  "type": "string",
+                  "maxLength": 100
+                },
+                "last_name": {
+                  "type": "string",
+                  "maxLength": 100
+                },
+                "phone_number": {
+                  "type": "string",
+                  "pattern": "^\\+\\d{7,15}$",
+                  "example": "+250780000001",
+                  "description": "E.164 format required."
+                },
+                "email": {
+                  "type": "string",
+                  "format": "email",
+                  "maxLength": 255,
+                  "description": "Optional. If provided, the OTP is also delivered here and `notif_channel` defaults to `[sms, email]`."
+                },
+                "locale": {
+                  "type": "string",
+                  "enum": [
+                    "rw",
+                    "en",
+                    "fr"
+                  ],
+                  "default": "rw",
+                  "description": "Language preference for notifications. Defaults to `rw` (Kinyarwanda)."
+                },
+                "password": {
+                  "type": "string",
+                  "minLength": 8,
+                  "maxLength": 128
+                }
+              }
+            }
+          }
+        }
+      },
+      "responses": {
+        "201": {
+          "description": "Account created — OTP sent to phone (and email if provided)",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "user_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "Pass to `POST /auth/verify-phone`."
+                  },
+                  "expires_in": {
+                    "type": "integer",
+                    "description": "OTP TTL in seconds (default 300 = 5 min).",
+                    "example": 300
+                  }
+                }
+              }
+            }
+          }
+        },
+        "409": {
+          "description": "Phone number or email already registered",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Error"
+              },
+              "examples": {
+                "phone_exists": {
+                  "value": {
+                    "error": {
+                      "code": "PHONE_ALREADY_EXISTS"
+                    }
+                  }
+                },
+                "email_exists": {
+                  "value": {
+                    "error": {
+                      "code": "EMAIL_ALREADY_EXISTS"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "422": {
+          "$ref": "#/components/responses/UnprocessableEntity"
+        }
+      }
+    }
+  }
+}

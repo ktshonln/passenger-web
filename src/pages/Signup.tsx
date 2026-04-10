@@ -56,7 +56,23 @@ const Signup = () => {
 
     setFieldErrors({});
     setError("");
-    register(formData, {
+
+    const rawPhone = formData.phone_number.replace(/\s/g, "");
+    const formattedPhone = rawPhone.startsWith("07") ? `+250${rawPhone.slice(1)}` : rawPhone;
+
+    const payload: any = {
+      first_name: formData.first_name,
+      last_name: formData.last_name,
+      phone_number: formattedPhone,
+      password: formData.password,
+      locale: "rw" // Could dynamically fetch from i18n, but assuming 'rw' default locally initially
+    };
+    
+    if (formData.email && formData.email.trim() !== "") {
+      payload.email = formData.email.trim();
+    }
+
+    register(payload, {
       onSuccess: (data: any) => {
         setUserId(data.user_id);
         setStep(2);
@@ -84,7 +100,7 @@ const Signup = () => {
     verifyOtp(
       { user_id: userId, otp: formData.otp },
       {
-        onSuccess: () => navigate("/profile"),
+        onSuccess: (data: any) => navigate("/login", { state: { identifier: data?.login_identifier || formData.phone_number } }),
       },
     );
   };

@@ -77,8 +77,8 @@ const MainLayout = () => {
                     onClick={() => setShowProfileMenu(!showProfileMenu)}
                     className={`flex items-center justify-center rounded-full hover:ring-4 transition-all outline-none overflow-hidden w-11 h-11 border shadow-sm shrink-0 hover:shadow-md ${isHome ? 'ring-white/20 bg-white/10 border-white/20 text-white' : 'ring-brand/10 bg-gray-50 dark:bg-[#111827] border-gray-200 dark:border-white/5'}`}
                   >
-                    {user.avatar_url ? (
-                      <img src={user.avatar_url} alt="Profile" className="w-full h-full object-cover transition-transform hover:scale-105" />
+                    {user.avatar_path ? (
+                      <img src={user.avatar_path} alt="Profile" className="w-full h-full object-cover transition-transform hover:scale-105" />
                     ) : (
                       <BiSolidUserCircle className={`transition-colors w-full h-full scale-110 ${isHome ? 'text-white' : 'text-gray-300 dark:text-gray-600 hover:text-brand/50'}`} />
                     )}
@@ -87,8 +87,8 @@ const MainLayout = () => {
                   <div className={`absolute right-0 top-14 w-56 bg-white dark:bg-[#1F2937] border border-gray-100 dark:border-white/10 rounded-2xl shadow-2xl shadow-gray-200/50 dark:shadow-black/60 py-2 origin-top-right z-50 transition-all duration-200 text-gray-900 ${showProfileMenu ? 'scale-100 opacity-100 pointer-events-auto' : 'scale-95 opacity-0 pointer-events-none'}`}>
                     <div className="px-5 py-4 border-b border-gray-100 dark:border-white/5 mb-2 flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full bg-brand/10 text-brand flex items-center justify-center shrink-0 overflow-hidden">
-                        {user.avatar_url ? (
-                          <img src={user.avatar_url} alt="Profile" className="w-full h-full object-cover" />
+                        {user.avatar_path ? (
+                          <img src={user.avatar_path} alt="Profile" className="w-full h-full object-cover" />
                         ) : (
                           <BiSolidUserCircle className="w-full h-full text-brand/70" />
                         )}

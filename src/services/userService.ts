@@ -8,9 +8,11 @@ export interface User {
   phone_verified_at: string | null;
   email: string | null;
   email_verified_at: string | null;
-  avatar_url: string | null;
+  avatar_path: string | null;
   user_type: string;
   status: string;
+  two_factor_enabled: boolean;
+  notif_channel: string;
   created_at: string;
   updated_at: string;
 }
@@ -18,8 +20,9 @@ export interface User {
 export interface UpdateUserPayload {
   first_name?: string;
   last_name?: string;
-  email?: string;
-  avatar_url?: string;
+  avatar_path?: string;
+  notif_channel?: string;
+  two_factor_enabled?: boolean;
 }
 
 const endpoint = "/users/me";

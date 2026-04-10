@@ -1,0 +1,93 @@
+{
+  "verifyPhone": {
+    "post": {
+      "tags": [
+        "Auth"
+      ],
+      "summary": "Verify phone number (standalone — no tokens)",
+      "description": "Verifies the phone OTP. On first verification (account `pending_verification`):\nactivates the account and sets `login_channel` to `phone`.\n\n**Does not issue tokens.** Returns `login_identifier` so the client can direct\nthe user to the login screen with the correct identifier pre-filled.\n\nIf the account was already active (email verified first), only stamps `phone_verified_at`.\nThe user can then switch to phone login via `POST /users/me/login-channel`.\n",
+      "security": [],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "required": [
+                "user_id",
+                "otp"
+              ],
+              "properties": {
+                "user_id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "otp": {
+                  "type": "string",
+                  "minLength": 6,
+                  "maxLength": 6,
+                  "description": "6-digit code sent to phone."
+                }
+              }
+            }
+          }
+        }
+      },
+      "responses": {
+        "200": {
+          "description": "Phone verified — proceed to login",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "message": {
+                    "type": "string",
+                    "example": "Phone verified. Please log in with your phone number."
+                  },
+                  "login_identifier": {
+                    "type": "string",
+                    "example": "+250780000001"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "400": {
+          "description": "Invalid OTP",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Error"
+              },
+              "example": {
+                "error": {
+                  "code": "INVALID_OTP"
+                }
+              }
+            }
+          }
+        },
+        "410": {
+          "description": "OTP expired",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Error"
+              },
+              "example": {
+                "error": {
+                  "code": "OTP_EXPIRED"
+                }
+              }
+            }
+          }
+        },
+        "422": {
+          "$ref": "#/components/responses/UnprocessableEntity"
+        }
+      }
+    }
+  }
+}

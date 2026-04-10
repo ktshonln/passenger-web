@@ -18,6 +18,16 @@ export const authHandlers = [
       return new HttpResponse(JSON.stringify({ message: "Invalid credentials" }), { status: 401 });
     }
 
+    if (user.status === "pending_verification") {
+      otps[user.id] = "123456";
+      return HttpResponse.json({ requires_verification: true, user_id: user.id, expires_in: 300 }, { status: 202 });
+    }
+
+    if (user.two_factor_enabled) {
+      otps[user.id] = "123456";
+      return HttpResponse.json({ requires_2fa: true, user_id: user.id, expires_in: 300 }, { status: 202 });
+    }
+
     const token = generateToken();
     mockSessions[token] = user.id;
 
@@ -87,6 +97,52 @@ export const authHandlers = [
 
     // Mark active
     user.status = "active";
+    delete otps[body.user_id];
+
+    return HttpResponse.json({
+      message: "Phone verified. Please log in with your phone number.",
+      login_identifier: user.phone_number
+    });
+  }),
+
+  // Verify Login (OTP for login when pending verification)
+  http.post(`${baseUrl}/auth/verify-login`, async ({ request }) => {
+    await delay(600);
+    const body = await request.json() as any;
+    
+    const user = usersDb.find(u => u.id === body.user_id);
+    const validOtp = otps[body.user_id];
+
+    if (!user || !validOtp || validOtp !== body.otp) {
+      return new HttpResponse(JSON.stringify({ message: "Invalid OTP! Using '123456'." }), { status: 400 });
+    }
+
+    delete otps[body.user_id];
+
+    const token = generateToken();
+    mockSessions[token] = user.id;
+
+    const { password, ...safeUser } = user;
+
+    return HttpResponse.json(safeUser, {
+      headers: {
+        "Set-Cookie": `access_token=${token}; HttpOnly; Path=/; Max-Age=3600`
+      }
+    });
+  }),
+  
+  // Verify 2FA (OTP for login when 2FA enabled)
+  http.post(`${baseUrl}/auth/verify-2fa`, async ({ request }) => {
+    await delay(600);
+    const body = await request.json() as any;
+    
+    const user = usersDb.find(u => u.id === body.user_id);
+    const validOtp = otps[body.user_id];
+
+    if (!user || !validOtp || validOtp !== body.otp) {
+      return new HttpResponse(JSON.stringify({ message: "Invalid OTP! Using '123456'." }), { status: 400 });
+    }
+
     delete otps[body.user_id];
 
     const token = generateToken();

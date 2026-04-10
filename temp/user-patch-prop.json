@@ -1,0 +1,111 @@
+{
+  "usersMe": {
+    "get": {
+      "tags": [
+        "Users"
+      ],
+      "summary": "Get own profile",
+      "description": "Returns the authenticated user's profile. Response shape differs by `user_type`:\n- `passenger` → `UserMePassenger`\n- `staff` → `UserMeStaff` (includes role slugs and packed CASL permission rules)\n",
+      "responses": {
+        "200": {
+          "description": "Own profile",
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/UserMePassenger"
+                  },
+                  {
+                    "$ref": "#/components/schemas/UserMeStaff"
+                  }
+                ],
+                "discriminator": {
+                  "propertyName": "user_type"
+                }
+              }
+            }
+          }
+        },
+        "401": {
+          "$ref": "#/components/responses/Unauthorized"
+        }
+      }
+    },
+    "patch": {
+      "tags": [
+        "Users"
+      ],
+      "summary": "Update own profile",
+      "description": "Updates the authenticated user's own profile. At least one field must be provided.\n\nField notes:\n- `email` — rejected for passenger accounts (`PASSENGERS_CANNOT_HAVE_EMAIL` 422). Staff only.\n- `avatar_path` — use the `path` from `GET /users/me/avatar/presigned-url` after uploading. Pass `null` to remove the current avatar (S3 file is deleted asynchronously).\n- `notif_channel` — controls how notifications are delivered. Setting `app` without a registered FCM token will leave push delivery non-functional until `POST /auth/register-device` is called.\n",
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "minProperties": 1,
+              "properties": {
+                "first_name": {
+                  "type": "string",
+                  "maxLength": 100
+                },
+                "last_name": {
+                  "type": "string",
+                  "maxLength": 100
+                },
+                "email": {
+                  "type": "string",
+                  "format": "email",
+                  "maxLength": 255,
+                  "description": "Staff only. Rejected with 422 for passengers."
+                },
+                "avatar_path": {
+                  "type": "string",
+                  "maxLength": 500,
+                  "nullable": true,
+                  "description": "S3 path from the presigned-url endpoint. null removes the avatar."
+                },
+                "notif_channel": {
+                  "type": "string",
+                  "enum": [
+                    "sms",
+                    "email",
+                    "app",
+                    "all"
+                  ],
+                  "description": "Notification delivery preference."
+                }
+              }
+            }
+          }
+        }
+      },
+      "responses": {
+        "200": {
+          "description": "Updated profile",
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/UserMePassenger"
+                  },
+                  {
+                    "$ref": "#/components/schemas/UserMeStaff"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "401": {
+          "$ref": "#/components/responses/Unauthorized"
+        },
+        "422": {
+          "$ref": "#/components/responses/UnprocessableEntity"
+        }
+      }
+    }
+  }
+}

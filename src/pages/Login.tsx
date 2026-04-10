@@ -17,11 +17,17 @@ const Login = () => {
   const [userId, setUserId] = useState<string>("");
   const [requires2FA, setRequires2FA] = useState(false);
   
+  const [countryCode, setCountryCode] = useState("+250");
+  
   // Pre-fill from location state if we navigated here after verify-phone
-  const [formData, setFormData] = useState({ 
-    identifier: location.state?.identifier || "", 
-    password: "",
-    otp: "" 
+  const [formData, setFormData] = useState(() => {
+    let initialIdentifier = location.state?.identifier || "";
+    if (initialIdentifier.startsWith("+250")) initialIdentifier = initialIdentifier.replace("+250", "");
+    return {
+      identifier: initialIdentifier, 
+      password: "",
+      otp: "" 
+    };
   });
   
   const [error, setError] = useState("");
@@ -69,8 +75,9 @@ const Login = () => {
     setError("");
     
     let parsedIdentifier = formData.identifier.replace(/\s/g, "");
-    if (/^07\d{8}$/.test(parsedIdentifier)) {
-      parsedIdentifier = `+250${parsedIdentifier.slice(1)}`;
+    if (!/[a-zA-Z@]/.test(parsedIdentifier) && !parsedIdentifier.startsWith("+")) {
+      if (parsedIdentifier.startsWith("0")) parsedIdentifier = parsedIdentifier.substring(1);
+      parsedIdentifier = `${countryCode}${parsedIdentifier}`;
     }
     
     login({ identifier: parsedIdentifier, password: formData.password }, { 
@@ -131,16 +138,32 @@ const Login = () => {
             <form onSubmit={handleSubmit} className="space-y-6 pt-2">
               <div className="group relative">
                 <label className={`block text-xs font-bold mb-2 transition-colors ${fieldErrors.identifier ? 'text-red-500' : 'text-gray-500 dark:text-gray-400 group-focus-within:text-brand'}`}>Phone or Email</label>
-                <div className="relative">
-                  <span className={`absolute left-4 top-1/2 -translate-y-1/2 transition-colors ${fieldErrors.identifier ? 'text-red-400' : 'text-gray-400 group-focus-within:text-brand'}`}>
+                <div className="relative flex">
+                  <span className={`absolute left-4 top-1/2 -translate-y-1/2 transition-colors z-10 ${fieldErrors.identifier ? 'text-red-400' : 'text-gray-400 group-focus-within:text-brand'}`}>
                     {formData.identifier.includes('@') ? <FiMail size={18} /> : <FiPhone size={18} />}
                   </span>
+                  {!/[a-zA-Z@]/.test(formData.identifier) && (
+                    <select
+                      value={countryCode}
+                      onChange={(e) => setCountryCode(e.target.value)}
+                      className="absolute left-10 top-0 bottom-0 bg-transparent border-none outline-none text-sm text-gray-700 dark:text-gray-200 z-10 font-semibold appearance-none pl-1 pr-6 cursor-pointer"
+                    >
+                      <option value="+250">🇷🇼 +250</option>
+                      <option value="+254">🇰🇪 +254</option>
+                      <option value="+256">🇺🇬 +256</option>
+                      <option value="+255">🇹🇿 +255</option>
+                    </select>
+                  )}
                   <input 
                     type="text" 
                     value={formData.identifier} 
-                    onChange={e => { setFormData({ ...formData, identifier: e.target.value }); clearFieldError('identifier'); }}
-                    placeholder="0781234567 or email"
-                    className={`w-full pl-11 pr-4 py-3.5 rounded-xl border bg-gray-50 dark:bg-[#1F2937]/50 text-gray-900 dark:text-white focus:bg-white dark:focus:bg-[#1F2937] transition-all outline-none ${fieldErrors.identifier ? 'border-red-400 focus:border-red-500 focus:ring-4 focus:ring-red-500/10' : 'border-gray-200 dark:border-white/10 focus:border-brand focus:ring-4 focus:ring-brand/10'}`}
+                    onChange={e => { 
+                      const val = e.target.value;
+                      setFormData({ ...formData, identifier: val }); 
+                      clearFieldError('identifier'); 
+                    }}
+                    placeholder="780 000 000 or email"
+                    className={`w-full ${/[a-zA-Z@]/.test(formData.identifier) ? 'pl-11' : 'pl-32'} pr-4 py-3.5 rounded-xl border bg-gray-50 dark:bg-[#1F2937]/50 text-gray-900 dark:text-white focus:bg-white dark:focus:bg-[#1F2937] transition-all outline-none ${fieldErrors.identifier ? 'border-red-400 focus:border-red-500 focus:ring-4 focus:ring-red-500/10' : 'border-gray-200 dark:border-white/10 focus:border-brand focus:ring-4 focus:ring-brand/10'}`}
                   />
                 </div>
                 {fieldErrors.identifier && <span className="absolute -bottom-5 left-1 text-[11px] font-bold text-red-500">{fieldErrors.identifier}</span>}

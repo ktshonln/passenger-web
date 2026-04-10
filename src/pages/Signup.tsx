@@ -14,6 +14,7 @@ const Signup = () => {
   const [userId, setUserId] = useState<string>("");
   const [error, setError] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [countryCode, setCountryCode] = useState("+250");
 
   useEffect(() => {
     let interval: any;
@@ -42,11 +43,14 @@ const Signup = () => {
 
     if (!formData.phone_number) {
       errors.phone_number = "Phone number required";
-    } else if (!phoneRegex.test(formData.phone_number.replace(/\s/g, ""))) {
-      errors.phone_number = "Invalid format (e.g. +2507...)";
     }
 
-    if (!formData.password) errors.password = "Password required";
+    const strongPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    if (!formData.password) {
+      errors.password = "Password required";
+    } else if (!strongPasswordRegex.test(formData.password)) {
+      errors.password = "Use 8+ chars, upper & lowercase, number & special char.";
+    }
 
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors);
@@ -57,8 +61,9 @@ const Signup = () => {
     setFieldErrors({});
     setError("");
 
-    const rawPhone = formData.phone_number.replace(/\s/g, "");
-    const formattedPhone = rawPhone.startsWith("07") ? `+250${rawPhone.slice(1)}` : rawPhone;
+    let inputPhone = formData.phone_number.replace(/\s/g, "");
+    if (inputPhone.startsWith("0")) inputPhone = inputPhone.substring(1);
+    const formattedPhone = `${countryCode}${inputPhone}`;
 
     const payload: any = {
       first_name: formData.first_name,
@@ -211,24 +216,34 @@ const Signup = () => {
                 >
                   Phone Number
                 </label>
-                <div className="relative">
+                <div className="relative flex">
                   <span
-                    className={`absolute left-4 top-1/2 -translate-y-1/2 transition-colors ${fieldErrors.phone_number ? "text-red-400" : "text-gray-400 group-focus-within:text-brand"}`}
+                    className={`absolute left-4 top-1/2 -translate-y-1/2 transition-colors z-10 ${fieldErrors.phone_number ? "text-red-400" : "text-gray-400 group-focus-within:text-brand"}`}
                   >
                     <FiPhone size={18} />
                   </span>
+                  <select
+                    value={countryCode}
+                    onChange={(e) => setCountryCode(e.target.value)}
+                    className="absolute left-10 top-0 bottom-0 bg-transparent border-none outline-none text-sm text-gray-700 dark:text-gray-200 z-10 font-semibold appearance-none pl-1 pr-6 cursor-pointer"
+                  >
+                    <option value="+250">🇷🇼 +250</option>
+                    <option value="+254">🇰🇪 +254</option>
+                    <option value="+256">🇺🇬 +256</option>
+                    <option value="+255">🇹🇿 +255</option>
+                  </select>
                   <input
                     type="tel"
                     value={formData.phone_number}
                     onChange={(e) => {
                       setFormData({
                         ...formData,
-                        phone_number: e.target.value,
+                        phone_number: e.target.value.replace(/\D/g, ''),
                       });
                       clearFieldError("phone_number");
                     }}
-                    placeholder="+250780000000"
-                    className={`w-full pl-11 pr-4 py-3.5 rounded-xl border bg-gray-50 dark:bg-[#1F2937]/50 text-gray-900 dark:text-white focus:bg-white dark:focus:bg-[#1F2937] transition-all outline-none ${fieldErrors.phone_number ? "border-red-400 focus:border-red-500 focus:ring-4 focus:ring-red-500/10" : "border-gray-200 dark:border-white/10 focus:border-brand focus:ring-4 focus:ring-brand/10"}`}
+                    placeholder="780 000 000"
+                    className={`w-full pl-32 pr-4 py-3.5 rounded-xl border bg-gray-50 dark:bg-[#1F2937]/50 text-gray-900 dark:text-white focus:bg-white dark:focus:bg-[#1F2937] transition-all outline-none ${fieldErrors.phone_number ? "border-red-400 focus:border-red-500 focus:ring-4 focus:ring-red-500/10" : "border-gray-200 dark:border-white/10 focus:border-brand focus:ring-4 focus:ring-brand/10"}`}
                   />
                 </div>
                 {fieldErrors.phone_number && (

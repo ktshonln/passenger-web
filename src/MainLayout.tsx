@@ -121,11 +121,11 @@ const MainLayout = () => {
                   </div>
                 </div>
               ) : (
-                <div className={`hidden sm:flex items-center gap-1 sm:gap-3 ml-2 sm:ml-4 border-l pl-4 sm:pl-6 ${isHome ? 'border-white/20' : 'border-gray-200 dark:border-white/10'}`}>
-                  <Link to="/login" className={`text-sm px-4 py-2 rounded-[2rem] font-semibold transition-all border ${isHome ? 'text-white border-transparent hover:border-white' : 'text-gray-700 dark:text-gray-300 border-transparent hover:border-gray-300'}`}>
+                <div className={`flex items-center gap-1 sm:gap-3 ml-2 sm:ml-4 border-l pl-2 sm:pl-6 ${isHome ? 'border-white/20' : 'border-gray-200 dark:border-white/10'}`}>
+                  <Link to="/login" className={`text-xs sm:text-sm px-2 sm:px-4 py-1.5 sm:py-2 rounded-[2rem] font-semibold transition-all border ${isHome ? 'text-white border-transparent hover:border-white' : 'text-gray-700 dark:text-gray-300 border-transparent hover:border-gray-300'}`}>
                     {t('login', 'Login')}
                   </Link>
-                  <Link to="/signup" className={`text-sm font-semibold px-6 py-2 rounded-[2rem] hover:-translate-y-0.5 transition-all hover:shadow-md active:scale-95 border ${isHome ? 'bg-white text-[#0E8BF1] border-white hover:shadow-black/10' : 'bg-brand text-white hover:bg-brand/90 border-brand hover:shadow-brand/20'}`}>
+                  <Link to="/signup" className={`text-xs sm:text-sm font-semibold px-3 sm:px-6 py-1.5 sm:py-2 rounded-[2rem] hover:-translate-y-0.5 transition-all hover:shadow-md active:scale-95 border ${isHome ? 'bg-white text-[#0E8BF1] border-white hover:shadow-black/10' : 'bg-brand text-white hover:bg-brand/90 border-brand hover:shadow-brand/20'}`}>
                     {t('signup', 'Signup')}
                   </Link>
                 </div>

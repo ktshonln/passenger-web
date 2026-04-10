@@ -17,17 +17,21 @@ const ForgotPassword = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const errors: Record<string, string> = {};
-    const phoneRegex = /^(\+2507|07)\d{8}$/;
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     if (!identifier) {
       errors.identifier = "Phone or email required";
     } else {
       const cleanInput = identifier.replace(/\s/g, "");
-      const isPhone = phoneRegex.test(cleanInput);
-      const isEmail = emailRegex.test(cleanInput);
-      if (!isPhone && !isEmail) {
-        errors.identifier = "Invalid phone or email format";
+      if (/[a-zA-Z@]/.test(cleanInput)) {
+        if (!emailRegex.test(cleanInput)) {
+          errors.identifier = "Invalid email format";
+        }
+      } else {
+        const digitsOnly = cleanInput.replace(/\D/g, "");
+        if (digitsOnly.length < 8 || digitsOnly.length > 12) {
+          errors.identifier = "Invalid phone format";
+        }
       }
     }
 

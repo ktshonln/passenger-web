@@ -45,6 +45,11 @@ const Signup = () => {
 
     if (!formData.phone_number) {
       errors.phone_number = "Phone number required";
+    } else {
+      const digitsOnly = formData.phone_number.replace(/\D/g, "");
+      if (digitsOnly.length < 8 || digitsOnly.length > 12) {
+        errors.phone_number = "Invalid phone format";
+      }
     }
 
     const strongPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;

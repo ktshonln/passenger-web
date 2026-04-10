@@ -36,4 +36,7 @@ export default {
 
   updatePassword: (data: any) =>
     axiosInstance.put<{ message: string }>(`${endpoint}/password`, data).then((res) => res.data),
+
+  getAvatarPresignedUrl: (contentType: string) =>
+    axiosInstance.get<{ upload_url: string; path: string }>(`${endpoint}/avatar/presigned-url`, { params: { content_type: contentType } }).then((res) => res.data),
 };

@@ -65,5 +65,28 @@ export const userHandlers = [
     user.password = body.new_password;
 
     return HttpResponse.json({ message: "Password updated successfully" });
+  }),
+
+  http.get(`${baseUrl}/users/me/avatar/presigned-url`, async ({ request, cookies }) => {
+    await delay(300);
+    if (!cookies.access_token || !mockSessions[cookies.access_token]) {
+      return new HttpResponse(null, { status: 401 });
+    }
+
+    const url = new URL(request.url);
+    const ext = url.searchParams.get("content_type")?.split('/')[1] || "jpg";
+    const mockedS3Key = `avatars/mock-user/${Date.now()}.${ext}`;
+    
+    return HttpResponse.json({
+      // We return a mock endpoint mapped directly to our MSW interceptor matching the React app's local port
+      upload_url: `http://localhost:5173/mock-s3-upload/${mockedS3Key}`,
+      path: mockedS3Key
+    });
+  }),
+
+  // Add the mock handler for the dummy direct S3 put upload
+  http.put(`http://localhost:5173/mock-s3-upload/*`, async () => {
+    await delay(600); // Simulate binary upload time
+    return new HttpResponse(null, { status: 200 });
   })
 ];

@@ -5,6 +5,8 @@ import { FiUser, FiLock, FiBell, FiGlobe, FiCamera, FiCheck, FiLoader } from "re
 import { Link } from "react-router-dom";
 import TopUp from "../components/TopUp";
 import { useUser, useUpdateUser, useChangePassword } from "../hooks/useUser";
+import userService from "../services/userService";
+import { getCdnUrl } from "../utils/media";
 
 export default function Profile() {
   const { t, i18n } = useTranslation();
@@ -21,10 +23,11 @@ export default function Profile() {
   const [avatarPreview, setAvatarPreview] = useState("");
   const [passwords, setPasswords] = useState({ current: "", new: "", confirm: "" });
   const [notifications, setNotifications] = useState({ email: true, sms: false });
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
 
   // Sync from server payload
   useEffect(() => {
-    if (user?.avatar_path) setAvatarPreview(user.avatar_path);
+    if (user?.avatar_path) setAvatarPreview(getCdnUrl(user.avatar_path));
     if (user?.notif_channel) {
        setNotifications({
           email: user.notif_channel.includes("email"),
@@ -33,15 +36,32 @@ export default function Profile() {
     }
   }, [user?.avatar_path, user?.notif_channel]);
 
-  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       const imgUrl = URL.createObjectURL(file);
       setAvatarPreview(imgUrl);
+      setIsUploadingAvatar(true);
       
-      // Stub: in reality you would POST to /upload to get an S3 URI.
-      const mockS3Path = `s3://katisha/avatars/${file.name}`;
-      updateUser.mutate({ avatar_path: mockS3Path });
+      try {
+        const { upload_url, path } = await userService.getAvatarPresignedUrl(file.type);
+        
+        const response = await fetch(upload_url, {
+          method: 'PUT',
+          headers: { 'Content-Type': file.type },
+          body: file
+        });
+
+        if (!response.ok) throw new Error("Object storage upload failed.");
+
+        updateUser.mutate({ avatar_path: path });
+      } catch (err) {
+        console.error("Avatar upload failed:", err);
+        if (user?.avatar_path) setAvatarPreview(getCdnUrl(user.avatar_path));
+        else setAvatarPreview("");
+      } finally {
+        setIsUploadingAvatar(false);
+      }
     }
   };
 
@@ -150,13 +170,22 @@ export default function Profile() {
                   <div className="relative group mx-auto lg:mx-0 shrink-0">
                     <div className="w-28 h-28 rounded-full overflow-hidden border-4 border-white dark:border-[#1F2937] shadow-lg relative bg-gray-50 dark:bg-[#111827]">
                       {avatarPreview ? (
-                        <img src={avatarPreview} alt="Avatar" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                        <img src={avatarPreview} alt="Avatar" className={`w-full h-full object-cover transition-all duration-500 ${isUploadingAvatar ? 'opacity-50 blur-sm scale-110' : 'group-hover:scale-105'}`} />
                       ) : (
                         <BiSolidUserCircle className="w-full h-full text-gray-200 dark:text-gray-700 scale-[1.15]" />
                       )}
-                      <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center cursor-pointer" onClick={() => fileInputRef.current?.click()}>
-                        <FiCamera size={24} className="text-white drop-shadow-md" />
-                      </div>
+                      
+                      {isUploadingAvatar && (
+                        <div className="absolute inset-0 flex items-center justify-center z-10">
+                          <FiLoader className="text-brand animate-spin" size={24} />
+                        </div>
+                      )}
+
+                      {!isUploadingAvatar && (
+                        <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center cursor-pointer" onClick={() => fileInputRef.current?.click()}>
+                          <FiCamera size={24} className="text-white drop-shadow-md" />
+                        </div>
+                      )}
                     </div>
                     <input
                       type="file"

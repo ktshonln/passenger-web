@@ -8,13 +8,13 @@ const apiClient = new APIClient<string[]>("/locations");
 const useLocations = () =>
     useInfiniteQuery<string[], Error, InfiniteData<string[], number>>({
         queryKey: [CACHE_KEY_LOCATIONS],
-        queryFn: ({ pageParam = 1 }) =>
+        queryFn: () =>
             apiClient.getAll(),
         initialPageParam: 1,
         staleTime: 10 * 1000,
-        placeholderData: (previousData, previousQuery) =>
+        placeholderData: (previousData, _previousQuery) =>
             previousData || { pages: [], pageParams: [] },
-        getNextPageParam: (lastPage, allPages) => {
+        getNextPageParam: (_lastPage, allPages) => {
             return allPages.length + 1;
         },
     });

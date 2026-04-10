@@ -36,7 +36,6 @@ const Signup = () => {
   const handleRegister = (e: React.FormEvent) => {
     e.preventDefault();
     const errors: Record<string, string> = {};
-    const phoneRegex = /^(\+2507|07)\d{8}$/;
 
     if (!formData.first_name) errors.first_name = "First name required";
     if (!formData.last_name) errors.last_name = "Last name required";
@@ -72,7 +71,7 @@ const Signup = () => {
       password: formData.password,
       locale: "rw" // Could dynamically fetch from i18n, but assuming 'rw' default locally initially
     };
-    
+
     if (formData.email && formData.email.trim() !== "") {
       payload.email = formData.email.trim();
     }

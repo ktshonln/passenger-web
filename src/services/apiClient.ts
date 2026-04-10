@@ -1,4 +1,4 @@
-import axios, { AxiosRequestConfig } from "axios";
+import axios from "axios";
 
 export const baseUrl = import.meta.env.VITE_API_URL || '/api/v1'; // Dynamically use import.meta.env.VITE_API_URL || '/api/v1'. By falling back to /api/v1 locally, we are now making "same-origin" requests that completely bypass all CORS restrictions. 
 
@@ -15,7 +15,7 @@ axiosInstance.interceptors.response.use(
             // Intercept catastrophic system faults (500)
             if (status === 500) {
                 window.location.href = '/500';
-            } 
+            }
             // Intercept permission zone violations (403)
             else if (status === 403) {
                 window.location.href = '/403';

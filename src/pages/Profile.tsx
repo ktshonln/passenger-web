@@ -31,10 +31,10 @@ export default function Profile() {
   useEffect(() => {
     if (user?.avatar_path) setAvatarPreview(getCdnUrl(user.avatar_path));
     if (user?.notif_channel) {
-       setNotifications({
-          email: user.notif_channel.includes("email"),
-          sms: user.notif_channel.includes("sms")
-       });
+      setNotifications({
+        email: user.notif_channel.includes("email"),
+        sms: user.notif_channel.includes("sms")
+      });
     }
   }, [user?.avatar_path, user?.notif_channel]);
 
@@ -44,10 +44,11 @@ export default function Profile() {
       const imgUrl = URL.createObjectURL(file);
       setAvatarPreview(imgUrl);
       setIsUploadingAvatar(true);
-      
+
       try {
         const { upload_url, path } = await userService.getAvatarPresignedUrl(file.type);
-        
+        console.log("upload url", upload_url, "path", path);
+
         const response = await fetch(upload_url, {
           method: 'PUT',
           headers: { 'Content-Type': file.type },
@@ -73,12 +74,12 @@ export default function Profile() {
   const toggleNotif = (type: 'email' | 'sms') => {
     const next = { ...notifications, [type]: !notifications[type] };
     setNotifications(next);
-    
+
     const channels = [];
     if (next.email) channels.push("email");
     if (next.sms) channels.push("sms");
     if (channels.length === 0) channels.push("none");
-    
+
     updateUser.mutate({ notif_channel: channels.join(",") });
   };
 
@@ -142,8 +143,8 @@ export default function Profile() {
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
                     className={`flex items-center gap-3 px-4 py-3 rounded-xl font-semibold transition-all duration-300 relative overflow-hidden outline-none whitespace-nowrap ${isActive
-                        ? "text-brand dark:text-white bg-brand/10 dark:bg-brand/20"
-                        : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-white/5"
+                      ? "text-brand dark:text-white bg-brand/10 dark:bg-brand/20"
+                      : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-white/5"
                       }`}
                   >
                     {isActive && (
@@ -179,7 +180,7 @@ export default function Profile() {
                       ) : (
                         <BiSolidUserCircle className="w-full h-full text-gray-200 dark:text-gray-700 scale-[1.15]" />
                       )}
-                      
+
                       {isUploadingAvatar && (
                         <div className="absolute inset-0 flex items-center justify-center z-10">
                           <FiLoader className="text-brand animate-spin" size={24} />
@@ -273,7 +274,7 @@ export default function Profile() {
                     </button>
                   </div>
                 </form>
-                
+
                 <div className="max-w-md pt-5 space-y-4">
                   <div className="flex items-center justify-between p-4 bg-gray-50/50 dark:bg-[#1F2937]/50 rounded-2xl cursor-pointer transition-colors border border-transparent hover:border-gray-200 dark:hover:border-gray-700" onClick={() => updateUser.mutate({ two_factor_enabled: !user?.two_factor_enabled })}>
                     <div className="pr-4">
@@ -336,8 +337,8 @@ export default function Profile() {
                           key={lang.code}
                           onClick={() => i18n.changeLanguage(lang.code)}
                           className={`relative p-4 rounded-2xl transition-all duration-300 text-left border flex flex-col gap-3 overflow-hidden ${isActive
-                              ? 'border-brand bg-brand/5 shadow-sm shadow-brand/10'
-                              : 'border-gray-100 dark:border-[#1F2937] bg-white dark:bg-[#111827] hover:border-brand/30 hover:shadow-sm'
+                            ? 'border-brand bg-brand/5 shadow-sm shadow-brand/10'
+                            : 'border-gray-100 dark:border-[#1F2937] bg-white dark:bg-[#111827] hover:border-brand/30 hover:shadow-sm'
                             }`}
                         >
                           {isActive && (

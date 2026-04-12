@@ -80,7 +80,7 @@ export const userHandlers = [
     return HttpResponse.json({
       // We return a mock endpoint mapped directly to our MSW interceptor matching the React app's local port
       upload_url: `http://localhost:5173/mock-s3-upload/${mockedS3Key}`,
-      path: mockedS3Key
+      path: `https://i.pravatar.cc/150?u=${Date.now()}`
     });
   }),
 

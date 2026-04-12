@@ -135,15 +135,15 @@ export default function Profile() {
 
           {/* Sidebar Navigation */}
           <div className="w-full md:w-1/4 bg-white/70 dark:bg-[#111827]/70 backdrop-blur-md border border-gray-100 dark:border-white/5 shadow-md shadow-gray-200/50 dark:shadow-black/50 rounded-2xl p-3 shrink-0">
-            <div className="flex text-sm md:flex-col overflow-x-auto gap-2 custom-scroll hide-scrollbar">
+            <div className="flex flex-wrap md:flex-col text-sm gap-2">
               {tabs.map((tab) => {
                 const isActive = activeTab === tab.id;
                 return (
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-xl font-semibold transition-all duration-300 relative overflow-hidden outline-none whitespace-nowrap ${isActive
-                      ? "text-brand dark:text-white bg-brand/10 dark:bg-brand/20"
+                    className={`flex-[1_1_calc(50%-0.5rem)] md:flex-none flex items-center justify-center md:justify-start gap-2 md:gap-3 px-3 md:px-4 py-2.5 md:py-3 rounded-xl font-semibold transition-all duration-300 relative overflow-hidden outline-none whitespace-nowrap ${isActive
+                      ? "text-brand dark:text-white bg-brand/10 dark:bg-brand/20 shadow-sm"
                       : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-white/5"
                       }`}
                   >

@@ -8,6 +8,7 @@ import { BiSolidUserCircle } from "react-icons/bi";
 import { FiChevronDown, FiUser, FiLogOut } from "react-icons/fi";
 import { useUser } from "./hooks/useUser";
 import { useLogout } from "./hooks/useAuth";
+import { getCdnUrl } from "./utils/media";
 
 const MainLayout = () => {
   const { t } = useTranslation();
@@ -35,7 +36,7 @@ const MainLayout = () => {
     <div className={`overflow-x-hidden min-h-screen flex flex-col font-inter transition-colors duration-300 ${isHome ? 'bg-gradient-to-br from-brand to-[#1E99FF] text-white' : 'bg-[#F8FAFC] dark:bg-[#0B1120] text-gray-900 dark:text-gray-100'}`}>
       <header className={`sticky top-0 z-50 transition-all duration-300 border-b ${isHome ? 'bg-white/0 text-white border-white/0 shadow-none backdrop-blur-none' : 'bg-white/80 dark:bg-[#111827]/80 backdrop-blur-xl border-gray-100 dark:border-white/5 shadow-sm'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-24">
+          <div className="flex flex-wrap justify-between items-center min-h-[6rem] py-4 gap-y-4">
             {/* Logo */}
             <div className="flex shrink-0 items-center">
               <Link to="/" className="flex items-center outline-none group opacity-100 hover:opacity-90 transition-opacity">
@@ -75,10 +76,10 @@ const MainLayout = () => {
                 <div className="relative ml-1 sm:ml-4" ref={profileMenuRef}>
                   <button
                     onClick={() => setShowProfileMenu(!showProfileMenu)}
-                    className={`flex items-center justify-center rounded-full hover:ring-4 transition-all outline-none overflow-hidden w-11 h-11 border shadow-sm shrink-0 hover:shadow-md ${isHome ? 'ring-white/20 bg-white/10 border-white/20 text-white' : 'ring-brand/10 bg-gray-50 dark:bg-[#111827] border-gray-200 dark:border-white/5'}`}
+                    className={`flex items-center justify-center rounded-full hover:ring-4 transition-all outline-none overflow-hidden w-9 h-9 sm:w-11 sm:h-11 border shadow-sm shrink-0 hover:shadow-md ${isHome ? 'ring-white/20 bg-white/10 border-white/20 text-white' : 'ring-brand/10 bg-gray-50 dark:bg-[#111827] border-gray-200 dark:border-white/5'}`}
                   >
                     {user.avatar_path ? (
-                      <img src={user.avatar_path} alt="Profile" className="w-full h-full object-cover transition-transform hover:scale-105" />
+                      <img src={getCdnUrl(user.avatar_path)} alt="Profile" className="w-full h-full object-cover transition-transform hover:scale-105" />
                     ) : (
                       <BiSolidUserCircle className={`transition-colors w-full h-full scale-110 ${isHome ? 'text-white' : 'text-gray-300 dark:text-gray-600 hover:text-brand/50'}`} />
                     )}
@@ -88,7 +89,7 @@ const MainLayout = () => {
                     <div className="px-5 py-4 border-b border-gray-100 dark:border-white/5 mb-2 flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full bg-brand/10 text-brand flex items-center justify-center shrink-0 overflow-hidden">
                         {user.avatar_path ? (
-                          <img src={user.avatar_path} alt="Profile" className="w-full h-full object-cover" />
+                          <img src={getCdnUrl(user.avatar_path)} alt="Profile" className="w-full h-full object-cover" />
                         ) : (
                           <BiSolidUserCircle className="w-full h-full text-brand/70" />
                         )}

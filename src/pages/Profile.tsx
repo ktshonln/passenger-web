@@ -282,7 +282,7 @@ export default function Profile() {
                       <h4 className="font-semibold text-gray-900 dark:text-gray-100 text-sm">Two-Factor Authentication</h4>
                       <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Secure your account with an OTP on every login.</p>
                     </div>
-                    <div className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors duration-300 ${user?.two_factor_enabled ? 'bg-brand' : 'bg-gray-300 dark:bg-gray-600'}`}>
+                    <div className={`w-12 h-6 shrink-0 flex items-center rounded-full p-1 transition-colors duration-300 ${user?.two_factor_enabled ? 'bg-brand' : 'bg-gray-300 dark:bg-gray-600'}`}>
                       <div className={`bg-white w-4 h-4 rounded-full shadow-sm transform transition-transform duration-300 ${user?.two_factor_enabled ? 'translate-x-6' : 'translate-x-0'}`}></div>
                     </div>
                   </div>
@@ -304,7 +304,7 @@ export default function Profile() {
                         <h4 className="font-semibold text-gray-900 dark:text-gray-100 text-sm">Email Alerts</h4>
                         <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Digital tickets & account updates directly to your inbox.</p>
                       </div>
-                      <div className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors duration-300 ${notifications.email ? 'bg-brand' : 'bg-gray-300 dark:bg-gray-600'}`} onClick={(e) => { e.preventDefault(); toggleNotif('email') }}>
+                      <div className={`w-12 h-6 shrink-0 flex items-center rounded-full p-1 transition-colors duration-300 ${notifications.email ? 'bg-brand' : 'bg-gray-300 dark:bg-gray-600'}`} onClick={(e) => { e.preventDefault(); toggleNotif('email') }}>
                         <div className={`bg-white w-4 h-4 rounded-full shadow-sm transform transition-transform duration-300 ${notifications.email ? 'translate-x-6' : 'translate-x-0'}`}></div>
                       </div>
                     </label>
@@ -314,7 +314,7 @@ export default function Profile() {
                         <h4 className="font-semibold text-gray-900 dark:text-gray-100 text-sm">App Push Notifications</h4>
                         <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Quick boarding reminders and urgent delay alerts on your device.</p>
                       </div>
-                      <div className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors duration-300 ${notifications.app ? 'bg-brand' : 'bg-gray-300 dark:bg-gray-600'}`} onClick={(e) => { e.preventDefault(); toggleNotif('app') }}>
+                      <div className={`w-12 h-6 shrink-0 flex items-center rounded-full p-1 transition-colors duration-300 ${notifications.app ? 'bg-brand' : 'bg-gray-300 dark:bg-gray-600'}`} onClick={(e) => { e.preventDefault(); toggleNotif('app') }}>
                         <div className={`bg-white w-4 h-4 rounded-full shadow-sm transform transition-transform duration-300 ${notifications.app ? 'translate-x-6' : 'translate-x-0'}`}></div>
                       </div>
                     </label>
@@ -324,7 +324,7 @@ export default function Profile() {
                         <h4 className="font-semibold text-gray-900 dark:text-gray-100 text-sm">SMS Messages</h4>
                         <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Receive text updates when offline or roaming.</p>
                       </div>
-                      <div className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors duration-300 ${notifications.sms ? 'bg-brand' : 'bg-gray-300 dark:bg-gray-600'}`} onClick={(e) => { e.preventDefault(); toggleNotif('sms') }}>
+                      <div className={`w-12 h-6 shrink-0 flex items-center rounded-full p-1 transition-colors duration-300 ${notifications.sms ? 'bg-brand' : 'bg-gray-300 dark:bg-gray-600'}`} onClick={(e) => { e.preventDefault(); toggleNotif('sms') }}>
                         <div className={`bg-white w-4 h-4 rounded-full shadow-sm transform transition-transform duration-300 ${notifications.sms ? 'translate-x-6' : 'translate-x-0'}`}></div>
                       </div>
                     </label>

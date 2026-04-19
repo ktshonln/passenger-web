@@ -9,11 +9,29 @@ export const axiosInstance = axios.create({
 
 axiosInstance.interceptors.response.use(
     (response) => response,
-    (error) => {
+    async (error) => {
+        const originalRequest = error.config;
+
         if (error.response) {
             const status = error.response.status;
-            const url = error.config?.url || '';
+            const url = originalRequest.url || '';
             const isAuthReq = url.includes('/auth/');
+
+            // Catch explicit 401 Unauthorized token expiries and attempt to auto-refresh silently
+            if (status === 401 && !originalRequest._retry && !url.includes('/auth/login') && !url.includes('/auth/refresh')) {
+                originalRequest._retry = true;
+                try {
+                    await axiosInstance.post('/auth/refresh');
+                    // Cookie tokens securely rotated! Resume the paused blocked request quietly:
+                    return axiosInstance(originalRequest);
+                } catch (err) {
+                    // Refresh explicitly failed (token revoked/hard expired). Fallback to login boundary
+                    if (window.location.pathname !== '/login' && window.location.pathname !== '/signup') {
+                        window.location.href = '/login';
+                    }
+                    return Promise.reject(err);
+                }
+            }
 
             // Intercept catastrophic system faults (500)
             if (status === 500) {

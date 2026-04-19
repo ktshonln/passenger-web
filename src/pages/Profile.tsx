@@ -24,16 +24,17 @@ export default function Profile() {
   // States
   const [avatarPreview, setAvatarPreview] = useState("");
   const [passwords, setPasswords] = useState({ current: "", new: "", confirm: "" });
-  const [notifications, setNotifications] = useState({ email: true, sms: false });
+  const [notifications, setNotifications] = useState({ email: false, sms: true, app: true });
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
 
   // Sync from server payload
   useEffect(() => {
     if (user?.avatar_path) setAvatarPreview(getCdnUrl(user.avatar_path));
-    if (user?.notif_channel) {
+    if (user?.notif_channel && Array.isArray(user.notif_channel)) {
       setNotifications({
-        email: user.notif_channel.includes("email"),
-        sms: user.notif_channel.includes("sms")
+        email: user.notif_channel.includes("email") || user.notif_channel.includes("all"),
+        sms: user.notif_channel.includes("sms") || user.notif_channel.includes("all"),
+        app: user.notif_channel.includes("app") || user.notif_channel.includes("all")
       });
     }
   }, [user?.avatar_path, user?.notif_channel]);
@@ -71,16 +72,16 @@ export default function Profile() {
     }
   };
 
-  const toggleNotif = (type: 'email' | 'sms') => {
+  const toggleNotif = (type: 'email' | 'sms' | 'app') => {
     const next = { ...notifications, [type]: !notifications[type] };
     setNotifications(next);
 
-    const channels = [];
+    const channels: string[] = [];
     if (next.email) channels.push("email");
     if (next.sms) channels.push("sms");
-    if (channels.length === 0) channels.push("none");
+    if (next.app) channels.push("app");
 
-    updateUser.mutate({ notif_channel: channels.join(",") });
+    updateUser.mutate({ notif_channel: channels });
   };
 
   const handleProfileSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -310,8 +311,18 @@ export default function Profile() {
 
                     <label className="flex items-center justify-between p-4 bg-gray-50/50 dark:bg-[#1F2937]/50 rounded-2xl cursor-pointer transition-colors border border-transparent hover:border-gray-200 dark:hover:border-gray-700">
                       <div className="pr-4">
-                        <h4 className="font-semibold text-gray-900 dark:text-gray-100 text-sm">Push & SMS</h4>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Quick boarding reminders and urgent delay notifications.</p>
+                        <h4 className="font-semibold text-gray-900 dark:text-gray-100 text-sm">App Push Notifications</h4>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Quick boarding reminders and urgent delay alerts on your device.</p>
+                      </div>
+                      <div className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors duration-300 ${notifications.app ? 'bg-brand' : 'bg-gray-300 dark:bg-gray-600'}`} onClick={(e) => { e.preventDefault(); toggleNotif('app') }}>
+                        <div className={`bg-white w-4 h-4 rounded-full shadow-sm transform transition-transform duration-300 ${notifications.app ? 'translate-x-6' : 'translate-x-0'}`}></div>
+                      </div>
+                    </label>
+
+                    <label className="flex items-center justify-between p-4 bg-gray-50/50 dark:bg-[#1F2937]/50 rounded-2xl cursor-pointer transition-colors border border-transparent hover:border-gray-200 dark:hover:border-gray-700">
+                      <div className="pr-4">
+                        <h4 className="font-semibold text-gray-900 dark:text-gray-100 text-sm">SMS Messages</h4>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Receive text updates when offline or roaming.</p>
                       </div>
                       <div className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors duration-300 ${notifications.sms ? 'bg-brand' : 'bg-gray-300 dark:bg-gray-600'}`} onClick={(e) => { e.preventDefault(); toggleNotif('sms') }}>
                         <div className={`bg-white w-4 h-4 rounded-full shadow-sm transform transition-transform duration-300 ${notifications.sms ? 'translate-x-6' : 'translate-x-0'}`}></div>

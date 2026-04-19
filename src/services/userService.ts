@@ -12,7 +12,7 @@ export interface User {
   user_type: string;
   status: string;
   two_factor_enabled: boolean;
-  notif_channel: string;
+  notif_channel: string[];
   created_at: string;
   updated_at: string;
 }
@@ -21,7 +21,7 @@ export interface UpdateUserPayload {
   first_name?: string;
   last_name?: string;
   avatar_path?: string;
-  notif_channel?: string;
+  notif_channel?: string[];
   two_factor_enabled?: boolean;
 }
 

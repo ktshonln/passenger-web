@@ -10,6 +10,8 @@ import ResetPassword from "./pages/ResetPassword";
 import ProtectedRoute from "./components/ProtectedRoute";
 import InternalError from "./pages/InternalError";
 import Forbidden from "./pages/Forbidden";
+import Trips from "./pages/Trips";
+import TripDetail from "./pages/TripDetail";
 
 const App = () => {
   return (
@@ -27,6 +29,9 @@ const App = () => {
       <Route element={<ProtectedRoute />}>
         <Route path="profile" element={<Profile />} />
       </Route>
+
+      <Route path="trips" element={<Trips />} />
+      <Route path="trips/:id" element={<TripDetail />} />
 
       </Route>
       <Route path="500" element={<InternalError />} />

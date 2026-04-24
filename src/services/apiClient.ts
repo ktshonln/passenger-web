@@ -17,8 +17,22 @@ axiosInstance.interceptors.response.use(
             const url = originalRequest.url || '';
             const isAuthReq = url.includes('/auth/');
 
-            // Catch explicit 401 Unauthorized token expiries and attempt to auto-refresh silently
-            if (status === 401 && !originalRequest._retry && !url.includes('/auth/login') && !url.includes('/auth/refresh')) {
+            // Catch explicit 401 Unauthorized token expiries and attempt to auto-refresh silently.
+            // Exclude endpoints that are legitimately 401 for unauthenticated users — these are
+            // auth probes or guest-accessible endpoints, not expired-token scenarios:
+            //   /users/me      — used in MainLayout to check if user is logged in
+            //   /users/me/wallet — only meaningful when authenticated; 401 = not logged in
+            const isAuthProbe =
+                url.includes('/users/me') ||
+                url.includes('/wallet');
+
+            if (
+                status === 401 &&
+                !originalRequest._retry &&
+                !url.includes('/auth/login') &&
+                !url.includes('/auth/refresh') &&
+                !isAuthProbe
+            ) {
                 originalRequest._retry = true;
                 try {
                     await axiosInstance.post('/auth/refresh');

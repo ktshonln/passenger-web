@@ -3,11 +3,14 @@ import { Trans, useTranslation } from "react-i18next";
 import { BiSolidWallet, BiShieldQuarter, BiSolidUserCircle } from "react-icons/bi";
 import { FiUser, FiLock, FiBell, FiGlobe, FiCamera, FiCheck, FiLoader } from "react-icons/fi";
 import { Link } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import TopUp from "../components/TopUp";
 import { useUser, useUpdateUser, useChangePassword } from "../hooks/useUser";
+import { useWalletBalance } from "../hooks/useWallet";
 import userService from "../services/userService";
 import { getCdnUrl } from "../utils/media";
 import { useToastStore } from "../stores/toastStore";
+import { CACHE_KEY_WALLET } from "../utils/constants";
 
 export default function Profile() {
   const { t, i18n } = useTranslation();
@@ -20,6 +23,8 @@ export default function Profile() {
   const { data: user, isLoading } = useUser();
   const updateUser = useUpdateUser();
   const changePassword = useChangePassword();
+  const { data: wallet, isLoading: isWalletLoading } = useWalletBalance(Boolean(user));
+  const queryClient = useQueryClient();
 
   // States
   const [avatarPreview, setAvatarPreview] = useState("");
@@ -387,10 +392,18 @@ export default function Profile() {
                   <div className="relative z-10 w-full sm:w-auto text-center sm:text-left">
                     <p className="text-white/80 font-semibold uppercase tracking-[0.15em] text-xs mb-2">Total Balance</p>
                     <div className="flex items-baseline gap-2 justify-center sm:justify-start">
-                      <h3 className="text-4xl md:text-5xl font-extrabold text-white tracking-tight">12,999<span className="text-2xl opacity-90">.20</span></h3>
+                      {isWalletLoading ? (
+                        <div className="h-10 w-40 rounded-xl bg-white/20 animate-pulse" />
+                      ) : (
+                        <h3 className="text-4xl md:text-5xl font-extrabold text-white tracking-tight">
+                          {wallet
+                            ? wallet.balance.toLocaleString()
+                            : '—'}
+                        </h3>
+                      )}
                     </div>
                     <span className="inline-block mt-2 px-2.5 py-1 bg-white/20 backdrop-blur-sm rounded text-white font-bold tracking-widest text-xs border border-white/20">
-                      RWF
+                      {wallet?.currency ?? 'RWF'}
                     </span>
                   </div>
 
@@ -423,7 +436,12 @@ export default function Profile() {
         </div>
       </div>
 
-      {topUpPrompt && <TopUp onClose={() => setTopUpPrompt(false)} />}
+      {topUpPrompt && (
+        <TopUp
+          onClose={() => setTopUpPrompt(false)}
+          onTopUpSuccess={() => queryClient.invalidateQueries({ queryKey: CACHE_KEY_WALLET })}
+        />
+      )}
     </div>
   );
 }

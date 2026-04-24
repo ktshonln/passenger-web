@@ -1,21 +1,25 @@
 import { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { AiOutlineSearch } from "react-icons/ai";
 import { MdOutlineLocationOn } from "react-icons/md";
 import useLocations from "../hooks/useLocations";
 import { BsTicketFill } from "react-icons/bs";
 import LogoName from "../components/LogoName";
+import type { Location } from "../types";
 
 function Home() {
+  const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [isFocused, setIsFocused] = useState(false);
   const [mounted, setMounted] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const { data: BUS_ROUTES } = useLocations();
+  // useLocations now returns Location[] (structured objects) via select
+  const { data: locations } = useLocations(query.trim() || undefined);
 
   // Close dropdown when clicking outside
   useEffect(() => {
-    setMounted(true); // Trigger fade-in for background vectors
+    setMounted(true);
 
     function handleClickOutside(event: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -28,21 +32,28 @@ function Home() {
     };
   }, []);
 
-  // Filter routes based on query using smart tokenized matching
-  const filteredSuggestions = (query.trim() !== ""
-    ? BUS_ROUTES?.pages.flat().filter((route) => {
-      const searchTokens = query.toLowerCase().trim().split(/\s+/);
-      const routeLower = route.toLowerCase();
-      // Route must contain every typed word regardless of exact formatting or order
-      return searchTokens.every(token => routeLower.includes(token));
-    })
-    : []) ?? [];
+  // Filter suggestions client-side using tokenized matching on location names
+  const filteredSuggestions: Location[] = (query.trim() !== "" && locations
+    ? locations.filter((loc) => {
+        const searchTokens = query.toLowerCase().trim().split(/\s+/);
+        const nameLower = loc.name.toLowerCase();
+        return searchTokens.every((token) => nameLower.includes(token));
+      })
+    : []);
 
   const showDropdown = isFocused && query.trim() !== "";
 
-  const handleSelect = (route: string) => {
-    setQuery(route);
+  const handleSelect = (location: Location) => {
+    setQuery(location.name);
     setIsFocused(false);
+    navigate(`/trips?q=${encodeURIComponent(location.name)}`);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (query.trim()) {
+      navigate(`/trips?q=${encodeURIComponent(query.trim())}`);
+    }
   };
 
   return (
@@ -67,7 +78,7 @@ function Home() {
           className={`w-full relative z-50 bg-white transition-all duration-300 font-inter ${showDropdown ? 'rounded-3xl shadow-2xl' : 'rounded-[2rem] shadow-2xl shadow-black/10 hover:shadow-black/20'}`}
         >
           <form
-            onSubmit={(e) => { e.preventDefault() }}
+            onSubmit={handleSubmit}
             className="flex items-center p-1 w-full"
           >
             <AiOutlineSearch
@@ -93,18 +104,18 @@ function Home() {
               <div className="border-t border-gray-100 pb-3 mt-1 text-gray-900">
                 {filteredSuggestions.length > 0 ? (
                   <div className="max-h-72 overflow-y-auto w-full custom-scroll scroll-smooth overscroll-contain">
-                    {filteredSuggestions.map((route, index) => (
+                    {filteredSuggestions.map((location) => (
                       <button
-                        key={index}
+                        key={location.id}
                         type="button"
-                        onClick={() => handleSelect(route)}
+                        onClick={() => handleSelect(location)}
                         className="w-full text-left flex items-center px-6 py-3.5 hover:bg-gray-50 transition-colors group"
                       >
                         <MdOutlineLocationOn
                           className="text-gray-400 group-hover:text-[#0E8BF1] mr-4 transition-colors shrink-0"
                           size={24}
                         />
-                        <span className="text-gray-700 font-semibold group-hover:text-gray-900">{route}</span>
+                        <span className="text-gray-700 font-semibold group-hover:text-gray-900">{location.name}</span>
                       </button>
                     ))}
                   </div>

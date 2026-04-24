@@ -187,6 +187,14 @@ export const authHandlers = [
     return HttpResponse.json({ message: "Password updated successfully" });
   }),
 
+  // Refresh token — always succeeds in dev (MSW has no real token validation)
+  http.post(`${baseUrl}/auth/refresh`, async () => {
+    await delay(200);
+    // In the mock environment there's no real token rotation — just return 200
+    // so the interceptor's retry logic can proceed without redirecting to /login.
+    return new HttpResponse(null, { status: 200 });
+  }),
+
   // Logout
   http.post(`${baseUrl}/auth/logout`, async ({ cookies }) => {
     await delay(400);

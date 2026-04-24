@@ -51,9 +51,19 @@ axiosInstance.interceptors.response.use(
             if (status === 500) {
                 window.location.href = '/500';
             }
-            // Intercept permission zone violations (403), except for Auth requests where we want the UI forms to handle the 403 inline (e.g invalid user type).
+            // Intercept permission zone violations (403), except for:
+            // - Auth requests (handled inline by forms)
+            // - Public passenger-facing endpoints that should show page-level errors
+            //   rather than a hard redirect (trips, locations, prices, organizations)
             else if (status === 403 && !isAuthReq) {
-                window.location.href = '/403';
+                const isPublicEndpoint =
+                    url.includes('/trips') ||
+                    url.includes('/locations') ||
+                    url.includes('/prices') ||
+                    url.includes('/organizations');
+                if (!isPublicEndpoint) {
+                    window.location.href = '/403';
+                }
             }
         }
         return Promise.reject(error);

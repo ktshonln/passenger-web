@@ -3,6 +3,18 @@ import { baseUrl } from "../../services/apiClient";
 import { tripsDb, tripsDetailDb } from "../db";
 
 export const tripHandlers = [
+  // Detail route MUST be registered before the list route.
+  // MSW matches handlers in order — if the list handler (no param) were first,
+  // a request to /trips/trip-001 could be swallowed by it on some MSW versions.
+  http.get(`${baseUrl}/trips/:id`, async ({ params }) => {
+    await delay(300);
+    const detail = tripsDetailDb[params.id as string];
+    if (!detail) {
+      return HttpResponse.json({ error: { code: "TRIP_NOT_FOUND" } }, { status: 404 });
+    }
+    return HttpResponse.json(detail, { status: 200 });
+  }),
+
   http.get(`${baseUrl}/trips`, async ({ request }) => {
     await delay(400);
     const url = new URL(request.url);
@@ -36,14 +48,5 @@ export const tripHandlers = [
     const paginated = results.slice((page - 1) * limit, page * limit);
 
     return HttpResponse.json({ data: paginated, total, page, limit }, { status: 200 });
-  }),
-
-  http.get(`${baseUrl}/trips/:id`, async ({ params }) => {
-    await delay(300);
-    const detail = tripsDetailDb[params.id as string];
-    if (!detail) {
-      return HttpResponse.json({ error: { code: "TRIP_NOT_FOUND" } }, { status: 404 });
-    }
-    return HttpResponse.json(detail, { status: 200 });
   }),
 ];

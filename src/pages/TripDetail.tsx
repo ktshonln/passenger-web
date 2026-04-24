@@ -45,7 +45,6 @@ const TripDetail = () => {
 
   // ── UI state ───────────────────────────────────────────────────────────────
   const [bookingFlowState, setBookingFlowState] = useState<FlowState>('idle');
-  const [selectedProvider, setSelectedProvider] = useState<'mtn' | 'airtel' | null>(null);
   const [phone, setPhone] = useState('');
   const [bookingId, setBookingId] = useState<string | null>(null);
   const [showTopUp, setShowTopUp] = useState(false);
@@ -98,7 +97,6 @@ const TripDetail = () => {
 
   const handleConfirmMoMo = (provider: 'mtn' | 'airtel', momoPhone: string) => {
     if (!trip || !price || !boardingStopId || !alightingStopId) return;
-    setSelectedProvider(provider);
     setPhone(momoPhone);
     createBooking.mutate(
       {

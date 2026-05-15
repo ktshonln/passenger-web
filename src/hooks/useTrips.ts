@@ -7,6 +7,8 @@ export const useTrips = (params?: GetTripsParams) =>
   useQuery<PaginatedTrips, Error>({
     queryKey: [...CACHE_KEY_TRIPS, params],
     queryFn: () => tripService.getTrips(params),
+    // Only fire when params are provided — undefined means "no filters selected yet"
+    enabled: params !== undefined,
     staleTime: 30 * 1000,
     placeholderData: (prev) => prev,
   });

@@ -29,6 +29,7 @@ const PriceDisplay = ({ isLoading, price, error }: PriceDisplayProps) => {
     );
   }
 
+  // price is null but no explicit error — stop pair not yet selected or no price data
   return null;
 };
 

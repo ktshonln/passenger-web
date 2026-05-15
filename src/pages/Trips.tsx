@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AiOutlineSearch } from 'react-icons/ai';
+import { MdOutlineDirectionsBus } from 'react-icons/md';
 import { useTrips } from '../hooks/useTrips';
 import TripCard from '../components/TripCard';
 import TripCardSkeleton from '../components/TripCardSkeleton';
@@ -16,48 +16,53 @@ const Trips = () => {
     date?: string;
   }>({});
 
+  // Only fire the query when at least boarding + alighting stop are selected.
+  // Without them the real backend returns 500 (staff-mode requires auth headers).
+  const hasRequiredFilters =
+    Boolean(filters.boarding_stop_id) && Boolean(filters.alighting_stop_id);
+
   const params: GetTripsParams = { ...filters };
 
-  const { data, isLoading, isError, refetch } = useTrips(params);
-
-  const handleClearFilters = () => {
-    setFilters({});
-  };
+  const { data, isLoading, isError, refetch } = useTrips(
+    hasRequiredFilters ? params : undefined
+  );
 
   const trips = data?.trips ?? [];
 
   return (
     <div className="bg-[#F8FAFC] dark:bg-[#0B1120] min-h-full">
       <div className="max-w-5xl mx-auto px-4 pt-6 pb-20">
-        {/* Sticky search bar */}
-        <div className="sticky top-0 z-40 bg-white/80 dark:bg-[#111827]/80 backdrop-blur-xl border-b border-gray-100 dark:border-white/5 py-3 -mx-4 px-4 mb-6">
-          <div className="relative">
-            <AiOutlineSearch
-              size={18}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 pointer-events-none"
-            />
-            <input
-              type="text"
-              readOnly
-              placeholder="Use filters below to search trips…"
-              className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-gray-200 dark:border-neutral-700 bg-gray-50/50 dark:bg-[#1F2937]/50 text-gray-900 dark:text-white text-sm outline-none cursor-default"
-            />
-          </div>
-        </div>
 
-        {/* Filter panel */}
+        {/* Filter panel — always visible at top */}
         <FilterPanel onFilterChange={setFilters} />
 
-        {/* Results grid */}
+        {/* Results */}
         <div className="grid grid-cols-1 gap-3 mt-4">
-          {isLoading ? (
+          {/* Prompt state — no filters selected yet */}
+          {!hasRequiredFilters && (
+            <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
+              <MdOutlineDirectionsBus size={48} className="text-gray-300 dark:text-gray-600" />
+              <p className="text-gray-600 dark:text-gray-400 font-semibold text-sm">
+                Select a boarding and alighting stop to search for trips
+              </p>
+              <p className="text-gray-400 dark:text-gray-600 text-xs max-w-xs">
+                Use the filters above to choose your departure and arrival stops, then optionally pick a date.
+              </p>
+            </div>
+          )}
+
+          {/* Loading skeletons */}
+          {hasRequiredFilters && isLoading && (
             <>
               <TripCardSkeleton />
               <TripCardSkeleton />
               <TripCardSkeleton />
               <TripCardSkeleton />
             </>
-          ) : isError ? (
+          )}
+
+          {/* Error state */}
+          {hasRequiredFilters && isError && (
             <div className="flex flex-col items-center justify-center py-16 gap-4">
               <p className="text-gray-500 dark:text-gray-400 text-sm">Failed to load trips.</p>
               <button
@@ -67,18 +72,23 @@ const Trips = () => {
                 Try again
               </button>
             </div>
-          ) : trips.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 gap-4">
-              <AiOutlineSearch size={40} className="text-gray-300 dark:text-gray-600" />
-              <p className="text-gray-500 dark:text-gray-400 text-sm">No trips found.</p>
-              <button
-                onClick={handleClearFilters}
-                className="px-4 py-2 rounded-xl border border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-300 text-sm font-semibold hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
-              >
-                Clear filters
-              </button>
+          )}
+
+          {/* Empty state */}
+          {hasRequiredFilters && !isLoading && !isError && trips.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
+              <MdOutlineDirectionsBus size={40} className="text-gray-300 dark:text-gray-600" />
+              <p className="text-gray-500 dark:text-gray-400 text-sm font-semibold">
+                No trips found for this route.
+              </p>
+              <p className="text-gray-400 dark:text-gray-600 text-xs">
+                Try a different date or stop combination.
+              </p>
             </div>
-          ) : (
+          )}
+
+          {/* Trip cards */}
+          {hasRequiredFilters && !isLoading && !isError && trips.length > 0 &&
             trips.map((trip) => (
               <TripCard
                 key={trip.id}
@@ -86,7 +96,7 @@ const Trips = () => {
                 onClick={() => navigate('/trips/' + trip.id)}
               />
             ))
-          )}
+          }
         </div>
       </div>
     </div>

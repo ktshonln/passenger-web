@@ -10,17 +10,29 @@ export const authHandlers = [
   http.post(`${baseUrl}/auth/login`, async ({ request }) => {
     await delay(600);
     const body = await request.json() as any;
-    
-    // Check against real database
-    const user = usersDb.find(u => u.email === body.identifier || u.phone_number === body.identifier);
-    
+
+    // Spec: user_type is required — validate it
+    if (!body.user_type || !['passenger', 'staff'].includes(body.user_type)) {
+      return new HttpResponse(JSON.stringify({ error: { code: 'VALIDATION_ERROR', message: '"user_type" is required' } }), { status: 422 });
+    }
+
+    const user = usersDb.find(u =>
+      (u.email === body.identifier || u.phone_number === body.identifier) &&
+      u.user_type === body.user_type
+    );
+
     if (!user || user.password !== body.password) {
-      return new HttpResponse(JSON.stringify({ message: "Invalid credentials" }), { status: 401 });
+      return new HttpResponse(JSON.stringify({ error: { code: 'INVALID_CREDENTIALS', message: 'Invalid credentials' } }), { status: 401 });
     }
 
     if (user.status === "pending_verification") {
       otps[user.id] = "123456";
-      return HttpResponse.json({ requires_verification: true, user_id: user.id, expires_in: 300 }, { status: 202 });
+      return HttpResponse.json({
+        requires_verification: true,
+        user_id: user.id,
+        channel: 'phone',
+        expires_in: 300
+      }, { status: 202 });
     }
 
     if (user.two_factor_enabled) {
@@ -31,10 +43,10 @@ export const authHandlers = [
     const token = generateToken();
     mockSessions[token] = user.id;
 
-    // We do not send password back
     const { password, ...safeUser } = user;
 
-    return HttpResponse.json(safeUser, {
+    // Spec: AuthResponse shape — { user: AuthUser, tokens? }
+    return HttpResponse.json({ user: safeUser }, {
       headers: {
         "Set-Cookie": `access_token=${token}; HttpOnly; Path=/; Max-Age=3600`
       }
@@ -150,7 +162,7 @@ export const authHandlers = [
 
     const { password, ...safeUser } = user;
 
-    return HttpResponse.json(safeUser, {
+    return HttpResponse.json({ user: safeUser }, {
       headers: {
         "Set-Cookie": `access_token=${token}; HttpOnly; Path=/; Max-Age=3600`
       }

@@ -9,6 +9,6 @@ export const handlers = [
     const filtered = q
       ? locationsDb.filter((loc) => loc.name.toLowerCase().includes(q))
       : locationsDb;
-    return HttpResponse.json({ data: filtered }, { status: 200 });
+    return HttpResponse.json({ locations: filtered }, { status: 200 });
   }),
 ];

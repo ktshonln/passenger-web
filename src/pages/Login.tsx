@@ -87,7 +87,7 @@ const Login = () => {
       parsedIdentifier = `${countryCode}${parsedIdentifier}`;
     }
     
-    login({ identifier: parsedIdentifier, password: formData.password }, { 
+    login({ identifier: parsedIdentifier, password: formData.password, user_type: 'passenger' }, { 
       onSuccess: (data: any) => {
         if (data?.requires_verification || data?.requires_2fa) {
           setUserId(data.user_id);

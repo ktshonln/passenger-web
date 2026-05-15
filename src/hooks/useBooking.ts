@@ -1,19 +1,21 @@
 import { useMutation } from "@tanstack/react-query";
 import bookingService from "../services/bookingService";
 import { useToastStore } from "../stores/toastStore";
-import type { Booking, BookingPayload } from "../types";
+import type { TicketInitiated, TicketPayload } from "../types";
 
 export const useCreateBooking = () => {
   const showToast = useToastStore((s) => s.showToast);
-  return useMutation<Booking, Error, BookingPayload>({
-    mutationFn: (payload: BookingPayload) => bookingService.createBooking(payload),
+  return useMutation<TicketInitiated, Error, TicketPayload>({
+    mutationFn: (payload: TicketPayload) => bookingService.createTicket(payload),
     onError: (err: any) => {
-      const code = err?.response?.data?.error?.code;
-      if (code === "NO_SEATS_AVAILABLE") {
+      const status = err?.response?.status;
+      if (status === 409) {
         showToast("No seats available for this trip.", "error");
+      } else if (status === 402) {
+        showToast("Insufficient wallet balance.", "error");
       } else {
         showToast(
-          err?.response?.data?.message || "Booking failed. Please try again.",
+          err?.response?.data?.error?.message || "Booking failed. Please try again.",
           "error"
         );
       }

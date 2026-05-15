@@ -5,29 +5,32 @@ import { bookingsDb } from "../db";
 const encodeSSE = (data: object) => `data: ${JSON.stringify(data)}\n\n`;
 
 export const bookingHandlers = [
-  http.post(`${baseUrl}/bookings`, async ({ request }) => {
+  // POST /tickets — initiate a ticket booking
+  http.post(`${baseUrl}/tickets`, async ({ request }) => {
     await delay(500);
     const body = (await request.json()) as any;
 
-    // Simulate no-seats error for a specific trip id (useful for testing)
+    // Simulate no-seats error for a specific trip id
     if (body.trip_id === "trip-full") {
-      return HttpResponse.json({ error: { code: "NO_SEATS_AVAILABLE" } }, { status: 409 });
+      return HttpResponse.json({ error: { code: "NO_SEATS_AVAILABLE", message: "No seats available" } }, { status: 409 });
     }
 
-    // Wallet payment requires authentication
+    // Wallet payment (no payment_method field) requires authentication
     const cookies = request.headers.get("cookie") ?? "";
-    if (body.payment_method === "wallet" && !cookies.includes("mock_jwt")) {
+    if (!body.payment_method && !cookies.includes("mock_jwt")) {
       return HttpResponse.json({ error: { code: "UNAUTHORIZED" } }, { status: 401 });
     }
 
-    const booking_id = `booking-${Date.now()}`;
-    bookingsDb[booking_id] = { booking_id, status: "pending" };
+    const ticket_id = `ticket-${Date.now()}`;
+    bookingsDb[ticket_id] = { booking_id: ticket_id, status: "payment_pending" };
 
-    return HttpResponse.json({ booking_id }, { status: 202 });
+    // Spec: 202 { ticket_id }
+    return HttpResponse.json({ ticket_id }, { status: 202 });
   }),
 
-  http.get(`${baseUrl}/bookings/:id/stream`, ({ params }) => {
-    const booking_id = params.id as string;
+  // GET /tickets/:id/stream — SSE payment status stream
+  http.get(`${baseUrl}/tickets/:id/stream`, ({ params }) => {
+    const ticket_id = params.id as string;
 
     const stream = new ReadableStream({
       async start(controller) {
@@ -39,15 +42,17 @@ export const bookingHandlers = [
         // After 3 seconds, send confirmed
         await new Promise<void>((resolve) => setTimeout(resolve, 3000));
 
-        if (bookingsDb[booking_id]) {
-          bookingsDb[booking_id].status = "confirmed";
+        if (bookingsDb[ticket_id]) {
+          bookingsDb[ticket_id].status = "confirmed";
         }
         controller.enqueue(
           encoder.encode(
             encodeSSE({
               status: "confirmed",
-              booking_id,
-              message: "Your seat is confirmed!",
+              ticket: {
+                id: ticket_id,
+                status: "confirmed",
+              },
             })
           )
         );

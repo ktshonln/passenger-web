@@ -1,7 +1,6 @@
 import { FiArrowRight } from 'react-icons/fi';
 import { MdAirlineSeatReclineNormal } from 'react-icons/md';
 import type { Trip } from '../types';
-import { getCdnUrl } from '../utils/media';
 
 interface TripCardProps {
   trip: Trip;
@@ -14,7 +13,10 @@ const TripCard = ({ trip, onClick }: TripCardProps) => {
     minute: '2-digit',
   });
 
-  const initials = trip.company.name.slice(0, 2).toUpperCase();
+  // Derive origin and destination from route_stops sorted by order
+  const sortedStops = [...trip.route.route_stops].sort((a, b) => a.order - b.order);
+  const origin = sortedStops[0]?.stop;
+  const destination = sortedStops[sortedStops.length - 1]?.stop;
 
   const seatsBadge = () => {
     if (trip.available_seats === 0) {
@@ -44,43 +46,33 @@ const TripCard = ({ trip, onClick }: TripCardProps) => {
   return (
     <button
       onClick={onClick}
-      aria-label={`Trip from ${trip.origin.name} to ${trip.destination.name}`}
+      aria-label={`Trip from ${origin?.name ?? ''} to ${destination?.name ?? ''}`}
       className="bg-white dark:bg-[#111827] rounded-2xl shadow-sm border border-gray-100 dark:border-white/5 p-4 hover:shadow-md transition-all cursor-pointer w-full text-left"
     >
       <div className="flex items-center gap-3">
-        {/* Operator logo / initials */}
-        {trip.company.logo_path ? (
-          <img
-            src={getCdnUrl(trip.company.logo_path)}
-            alt={trip.company.name}
-            className="w-10 h-10 rounded-full object-cover shrink-0"
-          />
-        ) : (
-          <div className="w-10 h-10 rounded-full bg-brand/10 text-brand flex items-center justify-center text-sm font-bold shrink-0">
-            {initials}
-          </div>
-        )}
+        {/* Operator initials placeholder (org_id only available, no logo/name) */}
+        <div className="w-10 h-10 rounded-full bg-brand/10 text-brand flex items-center justify-center text-sm font-bold shrink-0">
+          {trip.org_id.slice(0, 2).toUpperCase()}
+        </div>
 
         <div className="flex-1 min-w-0">
-          {/* Operator name */}
+          {/* Route name */}
           <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1 truncate">
-            {trip.company.name}
+            {trip.route.name ?? trip.org_id}
           </p>
 
-          {/* Route */}
+          {/* Origin → Destination */}
           <div className="flex items-center gap-1.5 text-sm font-bold text-gray-900 dark:text-white">
-            <span className="truncate">{trip.origin.name}</span>
+            <span className="truncate">{origin?.name ?? '—'}</span>
             <FiArrowRight size={14} className="text-brand shrink-0" />
-            <span className="truncate">{trip.destination.name}</span>
+            <span className="truncate">{destination?.name ?? '—'}</span>
           </div>
         </div>
 
-        {/* Right side: time + price + seats */}
+        {/* Right side: time + seats */}
         <div className="flex flex-col items-end gap-1 shrink-0 ml-2">
           <span className="text-sm font-bold text-gray-900 dark:text-white">{departureTime}</span>
-          <span className="text-sm font-semibold text-brand">
-            {trip.price.toLocaleString()} {trip.currency}
-          </span>
+          <span className="text-xs text-gray-400 dark:text-gray-500">View price</span>
           {seatsBadge()}
         </div>
       </div>

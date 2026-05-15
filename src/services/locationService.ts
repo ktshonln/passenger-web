@@ -2,8 +2,9 @@ import { axiosInstance } from './apiClient';
 import type { Location } from '../types';
 
 export default {
-  getLocations: (q?: string): Promise<{ data: Location[] }> =>
+  /** GET /locations?q= — returns { locations: Location[] } */
+  getLocations: (q?: string): Promise<{ locations: Location[] }> =>
     axiosInstance
-      .get<{ data: Location[] }>('/locations', { params: q ? { q } : undefined })
+      .get<{ locations: Location[] }>('/locations', { params: q ? { q } : undefined })
       .then((res) => res.data),
 };

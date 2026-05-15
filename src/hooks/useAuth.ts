@@ -10,11 +10,12 @@ export const useLogin = () => {
     mutationFn: (data: LoginPayload) => authService.login(data),
     onSuccess: (res: any) => {
       if (!res.requires_verification && !res.requires_2fa) {
-        queryClient.setQueryData(CACHE_KEY_USER, res.user);
+        // Spec: login returns { user: AuthUser, tokens? }
+        queryClient.setQueryData(CACHE_KEY_USER, res.user ?? res);
         showToast("Successfully logged in!", "success");
       }
     },
-    onError: (err: any) => showToast(err?.response?.data?.message || "Login failed", "error")
+    onError: (err: any) => showToast(err?.response?.data?.error?.message || err?.response?.data?.message || "Login failed", "error")
   });
 };
 

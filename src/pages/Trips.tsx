@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { AiOutlineSearch } from 'react-icons/ai';
 import { useTrips } from '../hooks/useTrips';
 import TripCard from '../components/TripCard';
@@ -8,32 +8,23 @@ import FilterPanel from '../components/FilterPanel';
 import type { GetTripsParams } from '../types';
 
 const Trips = () => {
-  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
-  const [searchQuery, setSearchQuery] = useState<string>(searchParams.get('q') ?? '');
-  const [debouncedQuery, setDebouncedQuery] = useState<string>(searchQuery);
-  const [filters, setFilters] = useState<{ origin_id?: string; company_id?: string; date?: string }>({});
+  const [filters, setFilters] = useState<{
+    boarding_stop_id?: string;
+    alighting_stop_id?: string;
+    date?: string;
+  }>({});
 
-  // Debounce searchQuery by 300ms
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedQuery(searchQuery);
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [searchQuery]);
-
-  const params: GetTripsParams = {
-    q: debouncedQuery || undefined,
-    ...filters,
-  };
+  const params: GetTripsParams = { ...filters };
 
   const { data, isLoading, isError, refetch } = useTrips(params);
 
   const handleClearFilters = () => {
-    setSearchQuery('');
     setFilters({});
   };
+
+  const trips = data?.trips ?? [];
 
   return (
     <div className="bg-[#F8FAFC] dark:bg-[#0B1120] min-h-full">
@@ -47,10 +38,9 @@ const Trips = () => {
             />
             <input
               type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search trips…"
-              className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-gray-200 dark:border-neutral-700 bg-gray-50/50 dark:bg-[#1F2937]/50 text-gray-900 dark:text-white text-sm focus:border-brand/50 focus:ring-2 focus:ring-brand/20 outline-none transition-all"
+              readOnly
+              placeholder="Use filters below to search trips…"
+              className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-gray-200 dark:border-neutral-700 bg-gray-50/50 dark:bg-[#1F2937]/50 text-gray-900 dark:text-white text-sm outline-none cursor-default"
             />
           </div>
         </div>
@@ -77,7 +67,7 @@ const Trips = () => {
                 Try again
               </button>
             </div>
-          ) : data?.data.length === 0 ? (
+          ) : trips.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 gap-4">
               <AiOutlineSearch size={40} className="text-gray-300 dark:text-gray-600" />
               <p className="text-gray-500 dark:text-gray-400 text-sm">No trips found.</p>
@@ -89,7 +79,7 @@ const Trips = () => {
               </button>
             </div>
           ) : (
-            data?.data.map((trip) => (
+            trips.map((trip) => (
               <TripCard
                 key={trip.id}
                 trip={trip}

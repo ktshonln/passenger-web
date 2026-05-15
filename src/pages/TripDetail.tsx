@@ -17,7 +17,7 @@ import MoMoWaitingScreen from '../components/MoMoWaitingScreen';
 import BookingSuccessOverlay from '../components/BookingSuccessOverlay';
 import TopUp from '../components/TopUp';
 
-import { getCdnUrl } from '../utils/media';
+import type { Stop } from '../types';
 
 type FlowState = 'idle' | 'sheet' | 'momo-waiting' | 'success' | 'failed' | 'timeout';
 
@@ -33,51 +33,65 @@ const TripDetail = () => {
     isLoading: isWalletLoading,
     refetch: refetchWallet,
   } = useWalletBalance(Boolean(user));
+
   const [boardingStopId, setBoardingStopId] = useState('');
   const [alightingStopId, setAlightingStopId] = useState('');
+
   const {
     data: price,
     isLoading: isPriceLoading,
-    error: priceError,
-  } = usePrice(boardingStopId, alightingStopId);
+  } = usePrice(trip?.route_id ?? '', boardingStopId, alightingStopId);
 
   const createBooking = useCreateBooking();
 
   // ── UI state ───────────────────────────────────────────────────────────────
   const [bookingFlowState, setBookingFlowState] = useState<FlowState>('idle');
   const [phone, setPhone] = useState('');
-  const [bookingId, setBookingId] = useState<string | null>(null);
+  const [ticketId, setTicketId] = useState<string | null>(null);
   const [showTopUp, setShowTopUp] = useState(false);
+
+  // ── Derive stops array from route_stops ────────────────────────────────────
+  const stops: Stop[] = trip
+    ? trip.route.route_stops
+        .slice()
+        .sort((a, b) => a.order - b.order)
+        .map((rs) => ({
+          id: rs.stop.id,
+          name: rs.stop.name,
+          lat: rs.stop.lat,
+          lng: rs.stop.lng,
+          order: rs.order,
+        }))
+    : [];
 
   // ── Stop initialization ────────────────────────────────────────────────────
   useEffect(() => {
-    if (trip && !boardingStopId) {
-      setBoardingStopId(trip.stops[0]?.id ?? '');
-      setAlightingStopId(trip.stops[trip.stops.length - 1]?.id ?? '');
+    if (trip && !boardingStopId && stops.length > 0) {
+      setBoardingStopId(stops[0].id);
+      setAlightingStopId(stops[stops.length - 1].id);
     }
   }, [trip]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Stop filtering ─────────────────────────────────────────────────────────
-  const boardingStop = trip?.stops.find((s) => s.id === boardingStopId);
-  const alightingStops =
-    trip?.stops.filter((s) => (boardingStop ? s.order > boardingStop.order : true)) ?? [];
-  const alightingStop = trip?.stops.find((s) => s.id === alightingStopId);
+  const boardingStop = stops.find((s) => s.id === boardingStopId);
+  const alightingStops = stops.filter((s) =>
+    boardingStop ? s.order > boardingStop.order : true
+  );
+  const alightingStop = stops.find((s) => s.id === alightingStopId);
 
   const handleBoardingChange = (stopId: string) => {
     setBoardingStopId(stopId);
-    const newBoarding = trip?.stops.find((s) => s.id === stopId);
-    const validAlighting = trip?.stops.filter((s) =>
+    const newBoarding = stops.find((s) => s.id === stopId);
+    const validAlighting = stops.filter((s) =>
       newBoarding ? s.order > newBoarding.order : true
     );
-    if (validAlighting?.length) setAlightingStopId(validAlighting[0].id);
+    if (validAlighting.length) setAlightingStopId(validAlighting[0].id);
   };
 
   // ── Proceed to Pay disabled condition ──────────────────────────────────────
-  const priceErrorCode =
-    (priceError as any)?.response?.data?.error?.code ?? null;
   const isProceedDisabled =
-    !price ||
-    priceErrorCode === 'PRICE_NOT_FOUND' ||
+    price === null ||
+    price === undefined ||
     isPriceLoading ||
     (trip?.available_seats ?? 0) === 0;
 
@@ -89,13 +103,18 @@ const TripDetail = () => {
         trip_id: trip.id,
         boarding_stop_id: boardingStopId,
         alighting_stop_id: alightingStopId,
-        payment_method: 'wallet',
+        // No payment_method for wallet — omit entirely
       },
-      { onSuccess: (data) => { setBookingId(data.booking_id); setBookingFlowState('success'); } }
+      {
+        onSuccess: (data) => {
+          setTicketId(data.ticket_id);
+          setBookingFlowState('success');
+        },
+      }
     );
   };
 
-  const handleConfirmMoMo = (provider: 'mtn' | 'airtel', momoPhone: string) => {
+  const handleConfirmMoMo = (provider: 'mtn' | 'airtel', momoPhone: string, passengerName: string) => {
     if (!trip || !price || !boardingStopId || !alightingStopId) return;
     setPhone(momoPhone);
     createBooking.mutate(
@@ -105,24 +124,23 @@ const TripDetail = () => {
         alighting_stop_id: alightingStopId,
         payment_method: provider,
         phone: momoPhone,
+        passenger_name: passengerName,
       },
       {
         onSuccess: (data) => {
-          setBookingId(data.booking_id);
+          setTicketId(data.ticket_id);
           setBookingFlowState('momo-waiting');
         },
       }
     );
   };
 
-  // ── Operator logo / initials ───────────────────────────────────────────────
-  const initials = trip ? trip.company.name.slice(0, 2).toUpperCase() : '';
-  const logoUrl = trip ? getCdnUrl(trip.company.logo_path) : '';
-
   // ── Sorted stops for display ───────────────────────────────────────────────
-  const sortedStops = trip
-    ? [...trip.stops].sort((a, b) => a.order - b.order)
-    : [];
+  const sortedStops = stops; // already sorted above
+
+  // ── Origin / destination for display ──────────────────────────────────────
+  const origin = sortedStops[0];
+  const destination = sortedStops[sortedStops.length - 1];
 
   // ── Departure formatted ────────────────────────────────────────────────────
   const departureFormatted = trip
@@ -175,20 +193,14 @@ const TripDetail = () => {
         {/* ── Operator header ── */}
         <div className="bg-white dark:bg-[#111827] rounded-2xl shadow-sm border border-gray-100 dark:border-white/5 p-5">
           <div className="flex items-start gap-4">
-            {logoUrl ? (
-              <img
-                src={logoUrl}
-                alt={trip.company.name}
-                className="w-14 h-14 rounded-full object-cover shrink-0"
-              />
-            ) : (
-              <div className="w-14 h-14 rounded-full bg-brand/10 text-brand flex items-center justify-center text-lg font-bold shrink-0">
-                {initials}
-              </div>
-            )}
+            <div className="w-14 h-14 rounded-full bg-brand/10 text-brand flex items-center justify-center text-lg font-bold shrink-0">
+              {trip.org_id.slice(0, 2).toUpperCase()}
+            </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <p className="font-bold text-gray-900 dark:text-white">{trip.company.name}</p>
+                <p className="font-bold text-gray-900 dark:text-white">
+                  {trip.route.name ?? trip.org_id}
+                </p>
                 {trip.is_express && (
                   <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 text-xs font-bold">
                     <RiFlashlightLine />
@@ -196,9 +208,6 @@ const TripDetail = () => {
                   </span>
                 )}
               </div>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">
-                {trip.company.story}
-              </p>
             </div>
           </div>
         </div>
@@ -206,9 +215,9 @@ const TripDetail = () => {
         {/* ── Route + departure ── */}
         <div className="bg-white dark:bg-[#111827] rounded-2xl shadow-sm border border-gray-100 dark:border-white/5 p-5 space-y-3">
           <div className="flex items-center gap-2 text-base font-bold text-gray-900 dark:text-white">
-            <span>{trip.origin.name}</span>
+            <span>{origin?.name ?? '—'}</span>
             <FiArrowRight size={16} className="text-brand shrink-0" />
-            <span>{trip.destination.name}</span>
+            <span>{destination?.name ?? '—'}</span>
           </div>
           <p className="text-sm text-gray-500 dark:text-gray-400">{departureFormatted}</p>
           <div className="flex items-center gap-1.5">
@@ -266,7 +275,7 @@ const TripDetail = () => {
         <div className="bg-white dark:bg-[#111827] rounded-2xl shadow-sm border border-gray-100 dark:border-white/5 p-5 space-y-4">
           <StopSelector
             label="Boarding stop"
-            stops={trip.stops}
+            stops={stops}
             value={boardingStopId}
             onChange={handleBoardingChange}
           />
@@ -283,7 +292,7 @@ const TripDetail = () => {
             <PriceDisplay
               isLoading={isPriceLoading}
               price={price ?? null}
-              error={priceErrorCode}
+              error={null}
             />
           </div>
 
@@ -329,7 +338,7 @@ const TripDetail = () => {
             <button
               onClick={() => {
                 setBookingFlowState('idle');
-                setBookingId(null);
+                setTicketId(null);
               }}
               className="px-6 py-2.5 rounded-xl bg-brand text-white font-bold text-sm hover:bg-brand/90 transition-all active:scale-95"
             >
@@ -365,10 +374,10 @@ const TripDetail = () => {
           />
         )}
 
-      {bookingFlowState === 'momo-waiting' && bookingId && (
+      {bookingFlowState === 'momo-waiting' && ticketId && (
         <MoMoWaitingScreen
           phone={phone}
-          bookingId={bookingId}
+          ticketId={ticketId}
           onConfirmed={() => setBookingFlowState('success')}
           onFailed={() => setBookingFlowState('failed')}
           onTimeout={() => setBookingFlowState('timeout')}
@@ -380,9 +389,9 @@ const TripDetail = () => {
         price &&
         boardingStop &&
         alightingStop &&
-        bookingId && (
+        ticketId && (
           <BookingSuccessOverlay
-            bookingId={bookingId}
+            ticketId={ticketId}
             trip={trip}
             boardingStop={boardingStop}
             alightingStop={alightingStop}

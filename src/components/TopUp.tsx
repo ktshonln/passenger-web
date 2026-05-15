@@ -7,7 +7,7 @@ import { BiSolidErrorCircle } from "react-icons/bi";
 import { useTranslation } from "react-i18next";
 import { useWalletBalance } from "../hooks/useWallet";
 import { useTopUp } from "../hooks/useTopUp";
-import { openBookingStream } from "../utils/sseClient";
+import { openTopUpStream } from "../utils/sseClient";
 import { CACHE_KEY_WALLET } from "../utils/constants";
 
 interface Props {
@@ -27,7 +27,7 @@ const TopUp = ({ onClose, onTopUpSuccess }: Props) => {
   const [amount, setAmount] = useState("");
   const [selectedProvider, setSelectedProvider] = useState<"mtn" | "airtel" | null>(null);
   const [phone, setPhone] = useState("");
-  const [bookingId, setBookingId] = useState<string | null>(null);
+  const [topupId, setTopupId] = useState<string | null>(null);
   const [sseError, setSseError] = useState<"failed" | "timeout" | null>(null);
   const [secondsLeft, setSecondsLeft] = useState(COUNTDOWN_SECONDS);
 
@@ -51,10 +51,10 @@ const TopUp = ({ onClose, onTopUpSuccess }: Props) => {
 
   // ── SSE stream (step 2 only) ───────────────────────────────────────────────
   useEffect(() => {
-    if (step !== 2 || !bookingId) return;
+    if (step !== 2 || !topupId) return;
 
-    const cleanup = openBookingStream(bookingId, {
-      onConfirmed: async () => {
+    const cleanup = openTopUpStream(topupId, {
+      onCompleted: async () => {
         await queryClient.invalidateQueries({ queryKey: CACHE_KEY_WALLET });
         onTopUpSuccess?.();
         onClose();
@@ -64,7 +64,7 @@ const TopUp = ({ onClose, onTopUpSuccess }: Props) => {
     });
     cleanupRef.current = cleanup;
     return () => cleanup();
-  }, [step, bookingId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [step, topupId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleProviderSelect = (provider: "mtn" | "airtel") => {
     setSelectedProvider(provider);
@@ -73,11 +73,13 @@ const TopUp = ({ onClose, onTopUpSuccess }: Props) => {
 
   const handleTopUpSubmit = () => {
     if (!selectedProvider || !amount || !phone.trim()) return;
+    // Map UI provider to API provider value
+    const apiProvider = selectedProvider === "mtn" ? "mtn_momo" : "airtel_money";
     topUp.mutate(
-      { amount: parseFloat(amount), provider: selectedProvider, phone: phone.trim() },
+      { amount: parseFloat(amount), provider: apiProvider, phone_number: phone.trim() },
       {
         onSuccess: (data) => {
-          setBookingId(data.booking_id);
+          setTopupId(data.topup_id);
           setSecondsLeft(COUNTDOWN_SECONDS);
           setSseError(null);
           setStep(2);
@@ -88,7 +90,7 @@ const TopUp = ({ onClose, onTopUpSuccess }: Props) => {
 
   const handleRetry = () => {
     cleanupRef.current?.();
-    setBookingId(null);
+    setTopupId(null);
     setSseError(null);
     setSecondsLeft(COUNTDOWN_SECONDS);
     setStep(0);

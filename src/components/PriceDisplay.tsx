@@ -16,7 +16,7 @@ const PriceDisplay = ({ isLoading, price, error }: PriceDisplayProps) => {
   if (price) {
     return (
       <span className="text-2xl font-bold text-gray-900 dark:text-white">
-        {price.amount.toLocaleString()} {price.currency}
+        {price.amount.toLocaleString()} RWF
       </span>
     );
   }

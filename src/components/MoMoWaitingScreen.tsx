@@ -1,17 +1,17 @@
 import { useEffect, useRef, useState } from "react";
 import { FiLoader } from "react-icons/fi";
-import { openBookingStream } from "../utils/sseClient";
+import { openTicketStream } from "../utils/sseClient";
 
 interface MoMoWaitingScreenProps {
   phone: string;       // raw phone number — will be masked for display
-  bookingId: string;
+  ticketId: string;
   onConfirmed: () => void;
   onFailed: () => void;
   onTimeout: () => void;
 }
 
 /** Masks a phone number, keeping the first 4 and last 3 characters visible.
- *  e.g. "+250788123456" → "+250 7** *** 456"
+ *  e.g. "+250788123456" → "+250 *** *** 456"
  */
 const maskPhone = (phone: string): string => {
   const digits = phone.replace(/\s/g, "");
@@ -25,7 +25,7 @@ const COUNTDOWN_SECONDS = 150; // 2 minutes 30 seconds
 
 const MoMoWaitingScreen = ({
   phone,
-  bookingId,
+  ticketId,
   onConfirmed,
   onFailed,
   onTimeout,
@@ -39,14 +39,15 @@ const MoMoWaitingScreen = ({
 
   // Open SSE stream on mount
   useEffect(() => {
-    const cleanup = openBookingStream(bookingId, {
+    const cleanup = openTicketStream(ticketId, {
       onConfirmed: () => onConfirmed(),
       onFailed: () => onFailed(),
+      onExpired: () => onFailed(),
       onTimeout: () => onTimeout(),
     });
     cleanupRef.current = cleanup;
     return () => cleanup();
-  }, [bookingId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [ticketId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Countdown timer — calls onTimeout when it reaches zero
   useEffect(() => {

@@ -1,14 +1,16 @@
 import { axiosInstance } from './apiClient';
-import type { Booking, BookingPayload, TopUpPayload } from '../types';
+import type { TicketInitiated, TicketPayload, TopUpInitiated, TopUpPayload } from '../types';
 
 export default {
-  createBooking: (payload: BookingPayload): Promise<Booking> =>
+  /** POST /tickets — returns 202 { ticket_id } */
+  createTicket: (payload: TicketPayload): Promise<TicketInitiated> =>
     axiosInstance
-      .post<Booking>('/bookings', payload)
+      .post<TicketInitiated>('/tickets', payload)
       .then((res) => res.data),
 
-  topUpWallet: (payload: TopUpPayload): Promise<Booking> =>
+  /** POST /users/me/wallet/topup — returns 202 { topup_id } */
+  topUpWallet: (payload: TopUpPayload): Promise<TopUpInitiated> =>
     axiosInstance
-      .post<Booking>('/wallet/topup', payload)
+      .post<TopUpInitiated>('/users/me/wallet/topup', payload)
       .then((res) => res.data),
 };

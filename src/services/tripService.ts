@@ -1,14 +1,16 @@
 import { axiosInstance } from './apiClient';
-import type { Trip, TripDetail, PaginatedResponse, GetTripsParams } from '../types';
+import type { Trip, PaginatedTrips, GetTripsParams } from '../types';
 
 export default {
-  getTrips: (params?: GetTripsParams): Promise<PaginatedResponse<Trip>> =>
+  /** Passenger search: GET /trips?boarding_stop_id=&alighting_stop_id=&date= */
+  getTrips: (params?: GetTripsParams): Promise<PaginatedTrips> =>
     axiosInstance
-      .get<PaginatedResponse<Trip>>('/trips', { params })
+      .get<PaginatedTrips>('/trips', { params })
       .then((res) => res.data),
 
-  getTripById: (id: string): Promise<TripDetail> =>
+  /** GET /trips/:id — returns { trip: Trip } */
+  getTripById: (id: string): Promise<Trip> =>
     axiosInstance
-      .get<TripDetail>(`/trips/${id}`)
-      .then((res) => res.data),
+      .get<{ trip: Trip }>(`/trips/${id}`)
+      .then((res) => res.data.trip),
 };

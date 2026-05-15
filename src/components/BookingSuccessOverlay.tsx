@@ -1,10 +1,10 @@
 import { useEffect, useRef } from "react";
 import { FiCheck, FiArrowRight } from "react-icons/fi";
-import type { TripDetail, Stop, Price } from "../types";
+import type { Trip, Stop, Price } from "../types";
 
 interface BookingSuccessOverlayProps {
-  bookingId: string;
-  trip: TripDetail;
+  ticketId: string;
+  trip: Trip;
   boardingStop: Stop;
   alightingStop: Stop;
   price: Price;
@@ -12,7 +12,7 @@ interface BookingSuccessOverlayProps {
 }
 
 const BookingSuccessOverlay = ({
-  bookingId,
+  ticketId,
   trip,
   boardingStop,
   alightingStop,
@@ -30,6 +30,11 @@ const BookingSuccessOverlay = ({
     hour: "2-digit",
     minute: "2-digit",
   });
+
+  // Derive origin and destination from route_stops
+  const sortedStops = [...trip.route.route_stops].sort((a, b) => a.order - b.order);
+  const origin = sortedStops[0]?.stop;
+  const destination = sortedStops[sortedStops.length - 1]?.stop;
 
   return (
     <div
@@ -50,21 +55,21 @@ const BookingSuccessOverlay = ({
 
       {/* Booking summary card */}
       <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-5 w-full max-w-sm space-y-4 mb-8">
-        {/* Booking reference */}
+        {/* Ticket reference */}
         <div className="text-center">
-          <p className="text-xs text-white/50 uppercase tracking-widest mb-1">Booking Reference</p>
-          <p className="text-sm font-mono font-bold text-brand">{bookingId}</p>
+          <p className="text-xs text-white/50 uppercase tracking-widest mb-1">Ticket Reference</p>
+          <p className="text-sm font-mono font-bold text-brand">{ticketId}</p>
         </div>
 
         <div className="border-t border-white/10" />
 
-        {/* Operator + route */}
+        {/* Route */}
         <div>
-          <p className="text-xs text-white/50 mb-1">{trip.company.name}</p>
+          <p className="text-xs text-white/50 mb-1">{trip.route.name ?? trip.org_id}</p>
           <div className="flex items-center gap-2 text-sm font-bold">
-            <span>{trip.origin.name}</span>
+            <span>{origin?.name ?? '—'}</span>
             <FiArrowRight size={14} className="text-brand shrink-0" />
-            <span>{trip.destination.name}</span>
+            <span>{destination?.name ?? '—'}</span>
           </div>
           <p className="text-xs text-white/50 mt-1">Departs {departureTime}</p>
         </div>
@@ -80,7 +85,7 @@ const BookingSuccessOverlay = ({
             <span>{alightingStop.name}</span>
           </div>
           <p className="text-base font-extrabold text-brand mt-1">
-            {price.amount.toLocaleString()} {price.currency}
+            {price.amount.toLocaleString()} RWF
           </p>
         </div>
       </div>

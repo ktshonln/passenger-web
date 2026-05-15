@@ -3,10 +3,10 @@ import { AiOutlineClose } from "react-icons/ai";
 import { BsChevronLeft } from "react-icons/bs";
 import { FiLoader } from "react-icons/fi";
 import { MdOutlineAccountBalanceWallet } from "react-icons/md";
-import type { TripDetail, Stop, Price, WalletBalance } from "../types";
+import type { Trip, Stop, Price, WalletBalance } from "../types";
 
 interface BookingSheetProps {
-  trip: TripDetail;
+  trip: Trip;
   boardingStop: Stop;
   alightingStop: Stop;
   price: Price;
@@ -14,7 +14,7 @@ interface BookingSheetProps {
   walletBalance: WalletBalance | null;
   isWalletLoading: boolean;
   onConfirmWallet: () => void;
-  onConfirmMoMo: (provider: "mtn" | "airtel", phone: string) => void;
+  onConfirmMoMo: (provider: "mtn" | "airtel", phone: string, passengerName: string) => void;
   onTopUpRequest: () => void;
   onClose: () => void;
   isSubmitting: boolean;
@@ -34,9 +34,10 @@ const BookingSheet = ({
   onClose,
   isSubmitting,
 }: BookingSheetProps) => {
-  const [momoStep, setMomoStep] = useState<0 | 1>(0); // 0 = provider select, 1 = phone input
+  const [momoStep, setMomoStep] = useState<0 | 1>(0); // 0 = provider select, 1 = phone + name input
   const [selectedProvider, setSelectedProvider] = useState<"mtn" | "airtel" | null>(null);
   const [phone, setPhone] = useState("");
+  const [passengerName, setPassengerName] = useState("");
 
   const hasSufficientBalance =
     walletBalance !== null && walletBalance.balance >= price.amount;
@@ -49,14 +50,17 @@ const BookingSheet = ({
     minute: "2-digit",
   });
 
+  // Derive route name for display
+  const routeName = trip.route.name ?? trip.org_id;
+
   const handleMoMoProviderSelect = (provider: "mtn" | "airtel") => {
     setSelectedProvider(provider);
     setMomoStep(1);
   };
 
   const handleMoMoSubmit = () => {
-    if (selectedProvider && phone.trim()) {
-      onConfirmMoMo(selectedProvider, phone.trim());
+    if (selectedProvider && phone.trim() && passengerName.trim()) {
+      onConfirmMoMo(selectedProvider, phone.trim(), passengerName.trim());
     }
   };
 
@@ -103,10 +107,10 @@ const BookingSheet = ({
               {boardingStop.name} → {alightingStop.name}
             </p>
             <p className="text-xs text-gray-500 dark:text-gray-400">
-              {trip.company.name} · Departs {departureTime}
+              {routeName} · Departs {departureTime}
             </p>
             <p className="text-lg font-extrabold text-brand">
-              {price.amount.toLocaleString()} {price.currency}
+              {price.amount.toLocaleString()} RWF
             </p>
           </div>
 
@@ -150,7 +154,7 @@ const BookingSheet = ({
                   <p className="text-xs text-red-500 dark:text-red-400 text-center">
                     Insufficient balance. You need{" "}
                     <span className="font-bold">
-                      {shortfall.toLocaleString()} {price.currency}
+                      {shortfall.toLocaleString()} RWF
                     </span>{" "}
                     more.
                   </p>
@@ -194,8 +198,19 @@ const BookingSheet = ({
                 <div className="space-y-4">
                   <div>
                     <label className="text-xs font-bold text-gray-500 dark:text-gray-400 mb-1.5 block">
-                      Phone number{" "}
-                      <span className="text-red-500">*</span>
+                      Passenger name <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={passengerName}
+                      onChange={(e) => setPassengerName(e.target.value)}
+                      placeholder="Full name"
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-neutral-700 bg-gray-50/50 dark:bg-[#1F2937]/50 text-gray-900 dark:text-white text-sm focus:border-brand/50 focus:ring-2 focus:ring-brand/20 outline-none transition-all"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-gray-500 dark:text-gray-400 mb-1.5 block">
+                      Phone number <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="tel"
@@ -207,7 +222,7 @@ const BookingSheet = ({
                   </div>
                   <button
                     onClick={handleMoMoSubmit}
-                    disabled={!phone.trim() || isSubmitting}
+                    disabled={!phone.trim() || !passengerName.trim() || isSubmitting}
                     className="w-full bg-brand text-white py-3 rounded-xl font-bold text-sm hover:bg-brand/90 transition-all active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
                     {isSubmitting ? (
@@ -216,7 +231,7 @@ const BookingSheet = ({
                         Processing…
                       </>
                     ) : (
-                      `Pay ${price.amount.toLocaleString()} ${price.currency}`
+                      `Pay ${price.amount.toLocaleString()} RWF`
                     )}
                   </button>
                 </div>

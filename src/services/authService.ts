@@ -1,8 +1,10 @@
 import { axiosInstance } from "./apiClient";
 
 export interface LoginPayload {
-  identifier: string; // phone or email
+  identifier: string;   // phone (E.164) or email
   password: string;
+  user_type: 'passenger' | 'staff';  // BREAKING: required by spec
+  device_name?: string;
 }
 
 export interface RegisterPayload {
@@ -11,6 +13,7 @@ export interface RegisterPayload {
   phone_number: string;
   password: string;
   email?: string;
+  locale?: 'rw' | 'en' | 'fr';
 }
 
 export interface VerifyPhonePayload {
@@ -33,13 +36,30 @@ export interface ResetPasswordPayload {
 }
 
 export default {
-  login: (data: LoginPayload) => axiosInstance.post("/auth/login", data).then(res => res.data),
-  register: (data: RegisterPayload) => axiosInstance.post("/auth/register", data).then(res => res.data),
-  verifyPhone: (data: VerifyPhonePayload) => axiosInstance.post("/auth/verify-phone", data).then(res => res.data),
-  verifyLogin: (data: any) => axiosInstance.post("/auth/verify-login", data).then(res => res.data),
-  verify2FA: (data: any) => axiosInstance.post("/auth/verify-2fa", data).then(res => res.data),
-  resendOtp: (data: ResendOtpPayload) => axiosInstance.post("/auth/resend-otp", data).then(res => res.data),
-  forgotPassword: (data: ForgotPasswordPayload) => axiosInstance.post("/auth/forgot-password", data).then(res => res.data),
-  resetPassword: (data: ResetPasswordPayload) => axiosInstance.post("/auth/reset-password", data).then(res => res.data),
-  logout: () => axiosInstance.post("/auth/logout").then(() => true)
+  login: (data: LoginPayload) =>
+    axiosInstance.post("/auth/login", data).then(res => res.data),
+
+  register: (data: RegisterPayload) =>
+    axiosInstance.post("/auth/register", data).then(res => res.data),
+
+  verifyPhone: (data: VerifyPhonePayload) =>
+    axiosInstance.post("/auth/verify-phone", data).then(res => res.data),
+
+  verifyLogin: (data: any) =>
+    axiosInstance.post("/auth/verify-login", data).then(res => res.data),
+
+  verify2FA: (data: any) =>
+    axiosInstance.post("/auth/verify-2fa", data).then(res => res.data),
+
+  resendOtp: (data: ResendOtpPayload) =>
+    axiosInstance.post("/auth/resend-otp", data).then(res => res.data),
+
+  forgotPassword: (data: ForgotPasswordPayload) =>
+    axiosInstance.post("/auth/forgot-password", data).then(res => res.data),
+
+  resetPassword: (data: ResetPasswordPayload) =>
+    axiosInstance.post("/auth/reset-password", data).then(res => res.data),
+
+  logout: () =>
+    axiosInstance.post("/auth/logout").then(() => true),
 };

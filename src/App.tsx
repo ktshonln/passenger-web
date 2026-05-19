@@ -12,6 +12,8 @@ import InternalError from "./pages/InternalError";
 import Forbidden from "./pages/Forbidden";
 import Trips from "./pages/Trips";
 import TripDetail from "./pages/TripDetail";
+import Privacy from "./pages/Privacy";
+import Cookies from "./pages/Cookies";
 
 const App = () => {
   return (
@@ -32,6 +34,8 @@ const App = () => {
 
       <Route path="trips" element={<Trips />} />
       <Route path="trips/:id" element={<TripDetail />} />
+      <Route path="privacy" element={<Privacy />} />
+      <Route path="cookies" element={<Cookies />} />
 
       </Route>
       <Route path="500" element={<InternalError />} />

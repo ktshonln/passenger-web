@@ -9,6 +9,7 @@ import { FiChevronDown, FiUser, FiLogOut } from "react-icons/fi";
 import { useUser } from "./hooks/useUser";
 import { useLogout } from "./hooks/useAuth";
 import { getCdnUrl } from "./utils/media";
+import ConsentBanner from "./components/ConsentBanner";
 
 const MainLayout = () => {
   const { t } = useTranslation();
@@ -144,17 +145,22 @@ const MainLayout = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full flex flex-col items-center">
           {isHome && <div className="w-full border-t border-white/20 mb-10" />}
           <div className="flex flex-wrap justify-center items-center gap-4 sm:gap-8 mb-2">
-            {["Privacy Policy", "Terms of Service", "Contact Us"].map((item, idx) => (
-              <a key={idx} href="#" className={`font-medium text-sm transition-colors ${isHome ? 'text-white/80 hover:text-white' : 'text-gray-500 dark:text-gray-400 hover:text-brand'}`}>
-                {item}
-              </a>
-            ))}
+            <Link to="/privacy" className={`font-medium text-sm transition-colors ${isHome ? 'text-white/80 hover:text-white' : 'text-gray-500 dark:text-gray-400 hover:text-brand'}`}>
+              Privacy Policy
+            </Link>
+            <Link to="/cookies" className={`font-medium text-sm transition-colors ${isHome ? 'text-white/80 hover:text-white' : 'text-gray-500 dark:text-gray-400 hover:text-brand'}`}>
+              Cookie Policy
+            </Link>
+            <a href="mailto:clmntmugisha@gmail.com" className={`font-medium text-sm transition-colors ${isHome ? 'text-white/80 hover:text-white' : 'text-gray-500 dark:text-gray-400 hover:text-brand'}`}>
+              Contact Us
+            </a>
           </div>
           <p className={`text-sm text-center ${isHome ? 'text-[#88C9FF]' : 'text-gray-400 dark:text-gray-600'}`}>
             &copy; {currentYear} Katisha Online. {t("allRights", "All rights reserved.")}
           </p>
         </div>
       </footer>
+      <ConsentBanner />
     </div>
   );
 };

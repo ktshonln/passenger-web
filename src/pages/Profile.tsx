@@ -1,8 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { BiShieldQuarter, BiSolidUserCircle, BiSolidWallet } from "react-icons/bi";
-import { FiUser, FiLock, FiBell, FiGlobe, FiCamera, FiCheck, FiLoader, FiArrowRight } from "react-icons/fi";
-import { Link } from "react-router-dom";
+import { BiShieldQuarter, BiSolidUserCircle } from "react-icons/bi";
+import { FiUser, FiLock, FiBell, FiGlobe, FiCamera, FiCheck, FiLoader } from "react-icons/fi";
 import { useUser, useUpdateUser, useChangePassword } from "../hooks/useUser";
 import userService from "../services/userService";
 import { getCdnUrl } from "../utils/media";

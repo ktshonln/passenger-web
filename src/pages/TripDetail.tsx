@@ -354,8 +354,7 @@ const TripDetail = () => {
                       <div className="relative">
                         <input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Enter password to confirm" className="w-full px-4 py-3 pr-12 rounded-xl border border-gray-200 dark:border-neutral-700 bg-gray-50/50 dark:bg-[#1F2937]/50 text-gray-900 dark:text-white text-sm outline-none" />
                         <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400">{showPassword ? <FiEyeOff size={16} /> : <FiEye size={16} />}</button>
-                      </div>
-                      <button onClick={handleWalletConfirm} disabled={!password || createTicket.isPending} className="w-full bg-brand text-white py-3 rounded-xl font-bold text-sm hover:bg-brand/90 active:scale-95 transition-all disabled:opacity-60 flex items-center justify-center gap-2">
+                      </div>                      <button onClick={handleWalletConfirm} disabled={!password || createTicket.isPending} className="w-full bg-brand text-white py-3 rounded-xl font-bold text-sm hover:bg-brand/90 active:scale-95 transition-all disabled:opacity-60 flex items-center justify-center gap-2">
                         {createTicket.isPending ? <><FiLoader className="animate-spin" size={16} /> Processing…</> : 'Confirm & Pay'}
                       </button>
                     </>

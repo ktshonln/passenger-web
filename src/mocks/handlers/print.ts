@@ -1,22 +1,5 @@
 import { http, HttpResponse } from "msw";
 import { baseUrl } from "../../services/apiClient";
-import { mockSessions } from "../db";
-
-/** Read access_token from Cookie header and resolve to a userId */
-const getAuthUserId = (request: Request): string | null => {
-  const cookieHeader = request.headers.get("cookie") ?? "";
-  const pairs = cookieHeader.split(";").map((p) => p.trim());
-  for (const pair of pairs) {
-    const eqIdx = pair.indexOf("=");
-    if (eqIdx === -1) continue;
-    const key = pair.slice(0, eqIdx).trim();
-    const val = pair.slice(eqIdx + 1).trim();
-    if (key === "access_token") {
-      return mockSessions[val] ?? null;
-    }
-  }
-  return null;
-};
 
 /** Generates a minimal self-contained HTML receipt for the given size */
 const buildReceiptHtml = (ticketId: string, size: string): string => {
@@ -87,11 +70,6 @@ body{font-family:'Courier New',monospace;font-size:11px;background:#fff;color:#0
 
 export const printHandlers = [
   http.get(`${baseUrl}/tickets/:id/print`, ({ params, request }) => {
-    const userId = getAuthUserId(request);
-    if (!userId) {
-      return HttpResponse.json({ error: { code: "FORBIDDEN" } }, { status: 403 });
-    }
-
     const ticketId = params.id as string;
     const url = new URL(request.url);
     const size = url.searchParams.get("size") ?? "80mm";

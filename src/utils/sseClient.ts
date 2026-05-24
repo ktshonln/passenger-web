@@ -4,10 +4,9 @@ import type { TicketSSEEvent, TopUpSSEEvent } from "../types";
 // ─── Ticket payment stream ────────────────────────────────────────────────────
 
 export interface TicketSSEHandlers {
-  onPending?: (event: TicketSSEEvent) => void;
+  onPending?: () => void;
   onConfirmed: (event: TicketSSEEvent) => void;
   onFailed: (event: TicketSSEEvent) => void;
-  onExpired?: (event: TicketSSEEvent) => void;
   onTimeout: (event: TicketSSEEvent) => void;
 }
 
@@ -49,7 +48,7 @@ export function openTicketStream(ticketId: string, handlers: TicketSSEHandlers):
 
             switch (event.status) {
               case "pending":
-                handlers.onPending?.(event);
+                handlers.onPending?.();
                 break;
               case "confirmed":
                 handlers.onConfirmed(event);
@@ -57,10 +56,6 @@ export function openTicketStream(ticketId: string, handlers: TicketSSEHandlers):
                 return;
               case "failed":
                 handlers.onFailed(event);
-                controller.abort();
-                return;
-              case "expired":
-                handlers.onExpired?.(event);
                 controller.abort();
                 return;
               case "timeout":
@@ -75,7 +70,7 @@ export function openTicketStream(ticketId: string, handlers: TicketSSEHandlers):
       }
     } catch (err: any) {
       if (err?.name !== "AbortError") {
-        handlers.onFailed({ status: "failed" });
+        handlers.onFailed({ status: "failed", reason: "network_error", retryable: true });
       }
     }
   })();
@@ -86,13 +81,14 @@ export function openTicketStream(ticketId: string, handlers: TicketSSEHandlers):
 // ─── Wallet top-up stream ─────────────────────────────────────────────────────
 
 export interface TopUpSSEHandlers {
-  onCompleted: (event: TopUpSSEEvent) => void;
+  onPending?: () => void;
+  onConfirmed: (event: TopUpSSEEvent) => void;
   onFailed: (event: TopUpSSEEvent) => void;
-  onTimeout: () => void;
+  onTimeout: (event: TopUpSSEEvent) => void;
 }
 
 /**
- * Opens GET /users/me/wallet/topup/:id/stream and dispatches named SSE events.
+ * Opens GET /users/me/wallet/topup/:id/stream and dispatches events.
  * Returns a cleanup function that aborts the stream.
  */
 export function openTopUpStream(topupId: string, handlers: TopUpSSEHandlers): () => void {
@@ -121,41 +117,46 @@ export function openTopUpStream(topupId: string, handlers: TopUpSSEHandlers): ()
         buffer = chunks.pop() ?? "";
 
         for (const chunk of chunks) {
-          // Named SSE events: "event: completed\ndata: {...}"
+          // Support both plain data: lines and named event: lines
           const lines = chunk.split("\n");
           const eventLine = lines.find((l) => l.startsWith("event:"));
           const dataLine = lines.find((l) => l.startsWith("data:"));
 
-          const eventName = eventLine?.slice(6).trim();
-          const data = dataLine ? (() => {
-            try { return JSON.parse(dataLine.slice(5).trim()); } catch { return {}; }
-          })() : {};
+          if (!dataLine) continue;
 
-          if (eventName === "completed") {
-            handlers.onCompleted(data as TopUpSSEEvent);
-            controller.abort();
-            return;
-          } else if (eventName === "failed") {
-            handlers.onFailed(data as TopUpSSEEvent);
-            controller.abort();
-            return;
-          } else if (eventName === "timeout") {
-            handlers.onTimeout();
-            controller.abort();
-            return;
+          try {
+            const data = JSON.parse(dataLine.slice(5).trim()) as TopUpSSEEvent;
+            const eventName = eventLine?.slice(6).trim();
+
+            // Handle named events (completed/failed/timeout) or status field
+            const status = data.status ?? (eventName === "completed" ? "confirmed" : eventName as string);
+
+            if (status === "pending") {
+              handlers.onPending?.();
+            } else if (status === "confirmed") {
+              handlers.onConfirmed({ ...data, status: "confirmed" });
+              controller.abort();
+              return;
+            } else if (status === "failed") {
+              handlers.onFailed(data);
+              controller.abort();
+              return;
+            } else if (status === "timeout") {
+              handlers.onTimeout(data);
+              controller.abort();
+              return;
+            }
+          } catch {
+            // malformed JSON — ignore
           }
         }
       }
     } catch (err: any) {
       if (err?.name !== "AbortError") {
-        handlers.onFailed({ type: "topup.failed", topup_id: topupId, user_id: "", amount: 0 });
+        handlers.onFailed({ status: "failed", reason: "network_error", retryable: true });
       }
     }
   })();
 
   return () => controller.abort();
 }
-
-// ─── Legacy alias (kept for backward compat) ─────────────────────────────────
-/** @deprecated Use openTicketStream instead */
-export const openBookingStream = openTicketStream as any;

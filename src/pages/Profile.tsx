@@ -1,21 +1,16 @@
 import { useState, useRef, useEffect } from "react";
-import { Trans, useTranslation } from "react-i18next";
-import { BiSolidWallet, BiShieldQuarter, BiSolidUserCircle } from "react-icons/bi";
-import { FiUser, FiLock, FiBell, FiGlobe, FiCamera, FiCheck, FiLoader } from "react-icons/fi";
+import { useTranslation } from "react-i18next";
+import { BiShieldQuarter, BiSolidUserCircle, BiSolidWallet } from "react-icons/bi";
+import { FiUser, FiLock, FiBell, FiGlobe, FiCamera, FiCheck, FiLoader, FiArrowRight } from "react-icons/fi";
 import { Link } from "react-router-dom";
-import { useQueryClient } from "@tanstack/react-query";
-import TopUp from "../components/TopUp";
 import { useUser, useUpdateUser, useChangePassword } from "../hooks/useUser";
-import { useWalletBalance } from "../hooks/useWallet";
 import userService from "../services/userService";
 import { getCdnUrl } from "../utils/media";
 import { useToastStore } from "../stores/toastStore";
-import { CACHE_KEY_WALLET } from "../utils/constants";
 
 export default function Profile() {
   const { t, i18n } = useTranslation();
   const [activeTab, setActiveTab] = useState("personal");
-  const [topUpPrompt, setTopUpPrompt] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { showToast } = useToastStore();
 
@@ -23,8 +18,6 @@ export default function Profile() {
   const { data: user, isLoading } = useUser();
   const updateUser = useUpdateUser();
   const changePassword = useChangePassword();
-  const { data: wallet, isLoading: isWalletLoading } = useWalletBalance(Boolean(user));
-  const queryClient = useQueryClient();
 
   // States
   const [avatarPreview, setAvatarPreview] = useState("");
@@ -114,7 +107,6 @@ export default function Profile() {
     { id: "personal", label: "Personal Info", icon: <FiUser size={18} /> },
     { id: "security", label: "Security", icon: <FiLock size={18} /> },
     { id: "preferences", label: "Preferences", icon: <FiBell size={18} /> },
-    { id: "wallet", label: t("wallet", "Wallet"), icon: <BiSolidWallet size={18} /> },
   ];
 
   if (isLoading) {
@@ -376,72 +368,9 @@ export default function Profile() {
               </div>
             )}
 
-            {/* Wallet Tab */}
-            {activeTab === "wallet" && (
-              <div className="animate-fade-in">
-                <div className="flex items-center gap-3 mb-8 pb-5 border-b border-gray-100 dark:border-white/10">
-                  <div className="p-2.5 bg-brand/10 rounded-xl text-brand"><BiSolidWallet size={20} /></div>
-                  <h2 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white tracking-tight">{t('wallet')}</h2>
-                </div>
-
-                <div className="relative overflow-hidden bg-gradient-to-br from-brand via-brand/90 to-blue-800 p-8 md:p-10 rounded-[2rem] shadow-xl shadow-brand/20 mb-8 w-full max-w-2xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6 hover:shadow-brand/30 transition-shadow">
-
-                  <div className="absolute top-[-20%] right-[-10%] w-48 h-48 bg-white/10 rounded-full blur-[30px] pointer-events-none" />
-                  <div className="absolute bottom-[-20%] left-[-10%] w-48 h-48 bg-black/10 rounded-full blur-[30px] pointer-events-none" />
-
-                  <div className="relative z-10 w-full sm:w-auto text-center sm:text-left">
-                    <p className="text-white/80 font-semibold uppercase tracking-[0.15em] text-xs mb-2">Total Balance</p>
-                    <div className="flex items-baseline gap-2 justify-center sm:justify-start">
-                      {isWalletLoading ? (
-                        <div className="h-10 w-40 rounded-xl bg-white/20 animate-pulse" />
-                      ) : (
-                        <h3 className="text-4xl md:text-5xl font-extrabold text-white tracking-tight">
-                          {wallet
-                            ? wallet.balance.toLocaleString()
-                            : '—'}
-                        </h3>
-                      )}
-                    </div>
-                    <span className="inline-block mt-2 px-2.5 py-1 bg-white/20 backdrop-blur-sm rounded text-white font-bold tracking-widest text-xs border border-white/20">
-                      {wallet?.currency ?? 'RWF'}
-                    </span>
-                  </div>
-
-                  <div className="relative z-10 shrink-0 w-full sm:w-auto">
-                    <button
-                      onClick={() => setTopUpPrompt(true)}
-                      className="bg-white text-brand px-6 py-3 rounded-xl font-bold text-sm hover:bg-gray-50 transition-all shadow-md active:scale-95 w-full flex items-center justify-center gap-2"
-                    >
-                      <BiSolidWallet size={20} />
-                      Top Up Now
-                    </button>
-                  </div>
-                </div>
-
-                <div className="max-w-2xl mx-auto text-center mt-8 bg-gray-50 dark:bg-[#1F2937]/50 py-4 px-6 rounded-2xl border border-gray-100 dark:border-white/5">
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    <Trans
-                      i18nKey='walletNotice'
-                      values={{ item: t('termsAndConditions') }}
-                      components={{
-                        1: <Link to="/terms-and-conditions" className="text-brand font-semibold hover:underline" />
-                      }}
-                    />
-                  </p>
-                </div>
-              </div>
-            )}
-
           </div>
         </div>
       </div>
-
-      {topUpPrompt && (
-        <TopUp
-          onClose={() => setTopUpPrompt(false)}
-          onTopUpSuccess={() => queryClient.invalidateQueries({ queryKey: CACHE_KEY_WALLET })}
-        />
-      )}
     </div>
   );
 }

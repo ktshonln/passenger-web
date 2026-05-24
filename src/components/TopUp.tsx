@@ -1,269 +1,302 @@
 import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { AiOutlineClose } from "react-icons/ai";
-import { BsChevronLeft } from "react-icons/bs";
-import { FiLoader } from "react-icons/fi";
-import { BiSolidErrorCircle } from "react-icons/bi";
-import { useTranslation } from "react-i18next";
-import { useWalletBalance } from "../hooks/useWallet";
+import { FiLoader, FiAlertCircle } from "react-icons/fi";
+import { BiSolidWallet } from "react-icons/bi";
 import { useTopUp } from "../hooks/useTopUp";
+import { useUser } from "../hooks/useUser";
+import { useWalletBalance } from "../hooks/useWallet";
 import { openTopUpStream } from "../utils/sseClient";
+import { useToastStore } from "../stores/toastStore";
 import { CACHE_KEY_WALLET } from "../utils/constants";
+import type { TopUpSSEEvent } from "../types";
 
 interface Props {
   onClose: () => void;
-  onTopUpSuccess?: () => void; // called after confirmed SSE — triggers wallet refetch in parent
+  onTopUpSuccess?: () => void;
 }
 
-type Step = 0 | 1 | 2; // 0=amount+provider, 1=phone, 2=waiting
+type Flow = "sheet" | "waiting" | "error";
+const COUNTDOWN = 150;
 
-const COUNTDOWN_SECONDS = 150;
+const maskPhone = (p: string) => {
+  const d = p.replace(/\s/g, "");
+  if (d.length <= 7) return p;
+  return `${d.slice(0, 4)} *** *** ${d.slice(-3)}`;
+};
 
 const TopUp = ({ onClose, onTopUpSuccess }: Props) => {
-  const { t } = useTranslation();
   const queryClient = useQueryClient();
-
-  const [step, setStep] = useState<Step>(0);
-  const [amount, setAmount] = useState("");
-  const [selectedProvider, setSelectedProvider] = useState<"mtn" | "airtel" | null>(null);
-  const [phone, setPhone] = useState("");
-  const [topupId, setTopupId] = useState<string | null>(null);
-  const [sseError, setSseError] = useState<"failed" | "timeout" | null>(null);
-  const [secondsLeft, setSecondsLeft] = useState(COUNTDOWN_SECONDS);
-
-  const cleanupRef = useRef<(() => void) | null>(null);
-
-  // TopUp is only ever rendered for authenticated users — safe to always enable
-  const { data: wallet, isLoading: isWalletLoading } = useWalletBalance(true);
+  const showToast = useToastStore((s) => s.showToast);
+  const { data: user } = useUser();
+  const { data: wallet } = useWalletBalance(true);
   const topUp = useTopUp();
 
-  // ── Countdown timer (step 2 only) ──────────────────────────────────────────
+  const [flow, setFlow] = useState<Flow>("sheet");
+  const [amount, setAmount] = useState("");
+  const [provider, setProvider] = useState<"mtn" | "airtel">("mtn");
+  const [phone, setPhone] = useState("");
+  const [amountError, setAmountError] = useState("");
+  const [phoneError, setPhoneError] = useState("");
+  const [sseError, setSseError] = useState<{ message: string; retryable: boolean } | null>(null);
+  const [countdown, setCountdown] = useState(COUNTDOWN);
+
+  // Pre-fill phone once user data resolves
   useEffect(() => {
-    if (step !== 2) return;
-    if (secondsLeft <= 0) {
-      cleanupRef.current?.();
-      setSseError("timeout");
-      return;
+    if (user?.phone_number && !phone) {
+      setPhone(user.phone_number);
     }
-    const timer = setInterval(() => setSecondsLeft((s) => s - 1), 1000);
-    return () => clearInterval(timer);
-  }, [step, secondsLeft]);
+  }, [user?.phone_number]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── SSE stream (step 2 only) ───────────────────────────────────────────────
-  useEffect(() => {
-    if (step !== 2 || !topupId) return;
+  const sseCleanupRef = useRef<(() => void) | null>(null);
+  const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-    const cleanup = openTopUpStream(topupId, {
-      onCompleted: async () => {
-        await queryClient.invalidateQueries({ queryKey: CACHE_KEY_WALLET });
-        onTopUpSuccess?.();
-        onClose();
-      },
-      onFailed: () => setSseError("failed"),
-      onTimeout: () => setSseError("timeout"),
-    });
-    cleanupRef.current = cleanup;
-    return () => cleanup();
-  }, [step, topupId]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Clean up SSE + countdown on unmount
+  useEffect(() => () => {
+    sseCleanupRef.current?.();
+    if (countdownRef.current) clearInterval(countdownRef.current);
+  }, []);
 
-  const handleProviderSelect = (provider: "mtn" | "airtel") => {
-    setSelectedProvider(provider);
-    setStep(1);
+  const startCountdown = () => {
+    setCountdown(COUNTDOWN);
+    if (countdownRef.current) clearInterval(countdownRef.current);
+    countdownRef.current = setInterval(() => {
+      setCountdown((c) => {
+        if (c <= 1) {
+          clearInterval(countdownRef.current!);
+          sseCleanupRef.current?.();
+          setSseError({ message: "Payment timed out. Please try again.", retryable: true });
+          setFlow("error");
+          return 0;
+        }
+        return c - 1;
+      });
+    }, 1000);
   };
 
-  const handleTopUpSubmit = () => {
-    if (!selectedProvider || !amount || !phone.trim()) return;
-    // Map UI provider to API provider value
-    const apiProvider = selectedProvider === "mtn" ? "mtn_momo" : "airtel_money";
+  const stopCountdown = () => {
+    if (countdownRef.current) clearInterval(countdownRef.current);
+  };
+
+  const handleConfirm = () => {
+    setAmountError("");
+    setPhoneError("");
+    const amt = parseFloat(amount);
+    if (!amount || isNaN(amt) || amt < 500) {
+      setAmountError("Minimum top up amount is RWF 500");
+      return;
+    }
+    if (!phone.trim()) {
+      setPhoneError("Please enter a valid phone number");
+      return;
+    }
+
     topUp.mutate(
-      { amount: parseFloat(amount), provider: apiProvider, phone_number: phone.trim() },
+      { amount: amt, payment_method: provider, phone: phone.trim() },
       {
         onSuccess: (data) => {
-          setTopupId(data.topup_id);
-          setSecondsLeft(COUNTDOWN_SECONDS);
-          setSseError(null);
-          setStep(2);
+          setFlow("waiting");
+          startCountdown();
+          const cleanup = openTopUpStream(data.topup_id, {
+            onConfirmed: (evt: TopUpSSEEvent) => {
+              stopCountdown();
+              queryClient.invalidateQueries({ queryKey: CACHE_KEY_WALLET });
+              showToast(
+                `Wallet topped up! New balance: ${evt.new_balance?.toLocaleString()} ${evt.currency ?? "RWF"}`,
+                "success"
+              );
+              onTopUpSuccess?.();
+              onClose();
+            },
+            onFailed: (evt: TopUpSSEEvent) => {
+              stopCountdown();
+              setSseError({
+                message: evt.message ?? "Payment was not completed.",
+                retryable: evt.retryable ?? true,
+              });
+              setFlow("error");
+            },
+            onTimeout: () => {
+              stopCountdown();
+              setSseError({ message: "Payment timed out. Please try again.", retryable: true });
+              setFlow("error");
+            },
+          });
+          sseCleanupRef.current = cleanup;
+        },
+        onError: (err: any) => {
+          const code = err?.response?.data?.error?.code;
+          if (code === "INVALID_AMOUNT") setAmountError("Minimum top up amount is RWF 500");
+          else if (code === "INVALID_PHONE") setPhoneError("Please enter a valid phone number");
         },
       }
     );
   };
 
   const handleRetry = () => {
-    cleanupRef.current?.();
-    setTopupId(null);
     setSseError(null);
-    setSecondsLeft(COUNTDOWN_SECONDS);
-    setStep(0);
-    setAmount("");
-    setPhone("");
-    setSelectedProvider(null);
+    setFlow("sheet");
   };
 
-  const minutes = String(Math.floor(secondsLeft / 60)).padStart(2, "0");
-  const seconds = String(secondsLeft % 60).padStart(2, "0");
+  const mins = String(Math.floor(countdown / 60)).padStart(2, "0");
+  const secs = String(countdown % 60).padStart(2, "0");
 
   return (
-    <div className="fixed inset-0 z-[100] bg-black/50 dark:bg-neutral-900/90 flex items-center justify-center overflow-hidden">
-      <div className="bg-white dark:bg-black sm:min-w-80 lg:min-w-sm rounded-2xl max-h-[90vh] md:h-3/4 md:w-xl overflow-y-auto relative">
-        <div className="p-8 h-full">
-          {/* Close button */}
-          <AiOutlineClose
-            onClick={onClose}
-            className="absolute top-5 right-5 cursor-pointer dark:text-white"
-          />
-          {/* Back button (step 1 only) */}
-          {step === 1 && (
-            <BsChevronLeft
-              onClick={() => setStep(0)}
-              className="absolute top-5 left-5 cursor-pointer dark:text-white"
-            />
-          )}
-
-          {/* ── Step 0: Amount + Provider ── */}
-          {step === 0 && (
-            <div className="mt-3 w-full">
-              {/* Insufficient balance notice (shown when triggered from TripDetail) */}
-              <div className="border rounded-lg p-3 mb-5 border-red-500 bg-red-50 dark:bg-red-950/50 text-red-500 flex space-x-2">
-                <div className="bg-white dark:bg-black rounded-full w-fit h-fit p-1 flex items-center justify-center">
-                  <BiSolidErrorCircle className="size-6" />
-                </div>
-                <div>
-                  <h2 className="font-semibold">{t("insufficientBalance")}</h2>
-                  <p className="max-w-72 text-sm">{t("iBMessage")}</p>
-                </div>
+    <>
+      {/* Sheet */}
+      {flow === "sheet" && (
+        <div
+          className="fixed inset-0 z-[100] bg-black/50 flex items-end sm:items-center justify-center"
+          role="dialog"
+          aria-modal="true"
+          onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+        >
+          <div className="bg-white dark:bg-[#111827] w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden">
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-gray-100 dark:border-white/5">
+              <div>
+                <h2 className="text-lg font-bold text-gray-900 dark:text-white">Top Up Wallet</h2>
+                {wallet && (
+                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+                    Balance: {wallet.available.toLocaleString()} {wallet.currency}
+                  </p>
+                )}
               </div>
+              <button
+                onClick={onClose}
+                className="p-1.5 rounded-xl hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
+                aria-label="Close"
+              >
+                <AiOutlineClose size={18} className="text-gray-500" />
+              </button>
+            </div>
 
-              {/* Current balance */}
-              <h1 className="text-neutral-400 font-bold text-xl mb-5">
-                {t("currentBalance")}{" "}
-                <span className="text-black dark:text-white">
-                  {isWalletLoading ? (
-                    <span className="inline-block h-5 w-24 rounded bg-gray-200 dark:bg-gray-700 animate-pulse align-middle" />
-                  ) : wallet ? (
-                    `${wallet.balance.toLocaleString()} ${wallet.currency}`
-                  ) : (
-                    "—"
-                  )}
-                </span>
-              </h1>
-
-              {/* Amount input */}
-              <div className="font-bold text-xl mb-5 flex items-center space-x-5">
-                <label htmlFor="topUpAmount" className="text-neutral-400">
-                  {t("add")}
+            {/* Body */}
+            <div className="px-6 py-5 space-y-4">
+              {/* Amount */}
+              <div>
+                <label className="text-xs font-bold text-gray-500 dark:text-gray-400 mb-1.5 block">
+                  Amount (RWF) <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="number"
-                  id="topUpAmount"
+                  min={500}
                   value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  min="0"
-                  className="outline-none border border-neutral-300 dark:border-neutral-700 rounded-md p-1 pl-3 ml-5 dark:text-white w-32"
+                  onChange={(e) => { setAmount(e.target.value); setAmountError(""); }}
+                  placeholder="Minimum 500 RWF"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-neutral-700 bg-gray-50/50 dark:bg-[#1F2937]/50 text-gray-900 dark:text-white text-sm outline-none focus:border-brand/50 focus:ring-2 focus:ring-brand/20 transition-all"
                 />
-                <span className="dark:text-white">RWF</span>
+                {amountError && <p className="text-xs text-red-500 mt-1">{amountError}</p>}
               </div>
 
-              {/* Provider buttons */}
-              <div className="m-4 mb-5 pt-5 space-y-4">
-                <button
-                  onClick={() => handleProviderSelect("mtn")}
-                  disabled={!amount || parseFloat(amount) <= 0}
-                  className="flex items-center w-full p-2 rounded-lg justify-between bg-[#FFCA06] text-[#004F70] font-bold cursor-pointer active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <span className="w-full">{t("topup")} {t("with")} MTN MoMo</span>
-                  <img src="/mtnLogo.svg" alt="MTN" className="size-8" />
-                </button>
-                <button
-                  onClick={() => handleProviderSelect("airtel")}
-                  disabled={!amount || parseFloat(amount) <= 0}
-                  className="flex items-center w-full p-2 rounded-lg justify-between bg-[#EC1C24] text-white font-bold cursor-pointer active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <span className="w-full">{t("topup")} {t("with")} Airtel Money</span>
-                  <img src="/airtelLogo.svg" alt="Airtel" className="size-8" />
-                </button>
+              {/* Provider */}
+              <div>
+                <label className="text-xs font-bold text-gray-500 dark:text-gray-400 mb-1.5 block">
+                  Payment method
+                </label>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setProvider("mtn")}
+                    className={`flex-1 p-3 rounded-xl border-2 font-bold text-sm transition-all flex items-center justify-center gap-2 ${
+                      provider === "mtn"
+                        ? "border-brand bg-brand/5 text-brand dark:text-white"
+                        : "border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-400"
+                    }`}
+                  >
+                    <img src="/mtnLogo.svg" alt="MTN" className="size-5" />
+                    MTN MoMo
+                  </button>
+                  <button
+                    onClick={() => setProvider("airtel")}
+                    className={`flex-1 p-3 rounded-xl border-2 font-bold text-sm transition-all flex items-center justify-center gap-2 ${
+                      provider === "airtel"
+                        ? "border-brand bg-brand/5 text-brand dark:text-white"
+                        : "border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-400"
+                    }`}
+                  >
+                    <img src="/airtelLogo.svg" alt="Airtel" className="size-5" />
+                    Airtel Money
+                  </button>
+                </div>
               </div>
-            </div>
-          )}
 
-          {/* ── Step 1: Phone number ── */}
-          {step === 1 && (
-            <div className="font-bold text-xl mb-5 w-full h-full flex items-center mt-8">
-              <div className="w-full">
-                <label htmlFor="topUpPhone" className="text-neutral-400 block">
-                  {t("signUpPhone")} <span className="text-red-500">*</span>
+              {/* Phone */}
+              <div>
+                <label className="text-xs font-bold text-gray-500 dark:text-gray-400 mb-1.5 block">
+                  Phone number <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="tel"
-                  id="topUpPhone"
                   value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
+                  onChange={(e) => { setPhone(e.target.value); setPhoneError(""); }}
                   placeholder="+250 7XX XXX XXX"
-                  className="outline-none border border-neutral-300 dark:border-neutral-700 rounded-md p-1 pl-3 mb-10 w-full dark:text-white"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-neutral-700 bg-gray-50/50 dark:bg-[#1F2937]/50 text-gray-900 dark:text-white text-sm outline-none focus:border-brand/50 focus:ring-2 focus:ring-brand/20 transition-all"
                 />
-                <button
-                  onClick={handleTopUpSubmit}
-                  disabled={!phone.trim() || topUp.isPending}
-                  className="w-full p-2 rounded-lg text-white bg-brand font-bold cursor-pointer active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                >
-                  {topUp.isPending ? (
-                    <>
-                      <FiLoader className="animate-spin" size={16} />
-                      Processing…
-                    </>
-                  ) : (
-                    t("topup")
-                  )}
-                </button>
+                {phoneError && <p className="text-xs text-red-500 mt-1">{phoneError}</p>}
               </div>
-            </div>
-          )}
 
-          {/* ── Step 2: Waiting / SSE ── */}
-          {step === 2 && (
-            <div className="flex flex-col items-center justify-center min-h-[300px] text-center mt-4">
-              {sseError === null ? (
-                <>
-                  <FiLoader className="animate-spin text-brand mb-6" size={48} />
-                  <h2 className="text-lg font-bold dark:text-white mb-2">
-                    Waiting for payment…
-                  </h2>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
-                    Enter your MoMo PIN to confirm
-                  </p>
-                  <div
-                    aria-live="polite"
-                    className="text-3xl font-extrabold dark:text-white tabular-nums"
-                  >
-                    {minutes}:{seconds}
-                  </div>
-                  <p className="text-xs text-gray-400 mt-1">Time remaining</p>
-                </>
-              ) : (
-                <>
-                  <div className="w-14 h-14 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center mb-4">
-                    <BiSolidErrorCircle className="text-red-500 size-8" />
-                  </div>
-                  <h2 className="text-lg font-bold dark:text-white mb-2">
-                    {sseError === "timeout" ? "Top-up timed out" : "Top-up failed"}
-                  </h2>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
-                    {sseError === "timeout"
-                      ? "The payment request timed out. Please try again."
-                      : "The payment was not completed. Please try again."}
-                  </p>
-                  <button
-                    onClick={handleRetry}
-                    className="px-6 py-2.5 rounded-xl bg-brand text-white font-bold text-sm hover:bg-brand/90 transition-all active:scale-95"
-                  >
-                    Try again
-                  </button>
-                </>
-              )}
+              {/* Submit */}
+              <button
+                onClick={handleConfirm}
+                disabled={!amount || !phone.trim() || topUp.isPending}
+                className="w-full bg-brand text-white py-3 rounded-xl font-bold text-sm hover:bg-brand/90 active:scale-95 transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {topUp.isPending ? (
+                  <><FiLoader className="animate-spin" size={16} /> Processing…</>
+                ) : (
+                  <><BiSolidWallet size={16} /> Confirm Top Up</>
+                )}
+              </button>
             </div>
-          )}
+          </div>
         </div>
-      </div>
-    </div>
+      )}
+
+      {/* Waiting screen */}
+      {flow === "waiting" && (
+        <div className="fixed inset-0 z-[100] bg-[#0B1120] flex flex-col items-center justify-center px-6 text-white">
+          <FiLoader className="animate-spin text-brand mb-8" size={56} />
+          <h2 className="text-xl font-bold mb-2">Waiting for payment</h2>
+          <p className="text-white/70 text-sm mb-6">Enter your MoMo PIN to confirm</p>
+          <div className="bg-white/10 rounded-2xl px-6 py-3 mb-6">
+            <p className="text-base font-mono font-semibold tracking-widest">{maskPhone(phone)}</p>
+          </div>
+          <div aria-live="polite" className="text-4xl font-extrabold tabular-nums">
+            {mins}:{secs}
+          </div>
+          <p className="text-white/50 text-xs mt-2">Time remaining</p>
+        </div>
+      )}
+
+      {/* Error card */}
+      {flow === "error" && sseError && (
+        <div className="fixed inset-0 z-[100] bg-black/50 flex items-center justify-center px-4">
+          <div className="bg-white dark:bg-[#111827] rounded-2xl p-6 max-w-sm w-full text-center space-y-3 border border-gray-100 dark:border-white/5 shadow-2xl">
+            <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center mx-auto">
+              <FiAlertCircle size={24} className="text-red-500" />
+            </div>
+            <p className="font-bold text-gray-900 dark:text-white">Top-up failed</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">{sseError.message}</p>
+            {sseError.retryable ? (
+              <button
+                onClick={handleRetry}
+                className="w-full bg-brand text-white py-2.5 rounded-xl font-bold text-sm hover:bg-brand/90 active:scale-95 transition-all"
+              >
+                Try again
+              </button>
+            ) : (
+              <p className="text-xs text-gray-400">Please try a different payment method.</p>
+            )}
+            <button
+              onClick={onClose}
+              className="w-full text-sm text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors py-1"
+            >
+              Dismiss
+            </button>
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 

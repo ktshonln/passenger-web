@@ -17,52 +17,22 @@ export interface Organization {
   story: string;
 }
 
-// ─── Trip (spec-aligned) ─────────────────────────────────────────────────────
-// The trip-service returns trips with a `route` object (containing `route_stops`)
-// rather than flat origin/destination/stops fields.
+// ─── Trip ────────────────────────────────────────────────────────────────────
+// Feature spec shape: flat origin/destination/stops/company fields
 
-export interface RouteStop {
-  order: number;
-  stop: Location;
-}
-
-export interface Route {
+export interface TripCompany {
   id: string;
-  org_id: string | null;
-  name: string | null;
-  is_active: boolean;
-  route_stops: RouteStop[];
+  name: string;
+  logo_path: string | null;
+  story?: string;
 }
 
 export interface TripBus {
   id: string;
   plate: string;
   type: string;
-  total_seats: number;
-  is_active: boolean;
 }
 
-/** Shape returned by GET /trips and GET /trips/:id */
-export interface Trip {
-  id: string;
-  series_id: string;
-  route_id: string;
-  org_id: string;
-  bus_id: string | null;
-  driver_id: string | null;
-  departure_at: string;   // ISO 8601
-  available_seats: number;
-  total_seats: number;
-  status: 'scheduled' | 'active' | 'completed' | 'cancelled';
-  is_express: boolean;
-  cancellation_allowed: boolean;
-  route: Route;
-  bus: TripBus | null;
-}
-
-// ─── Derived helpers (computed from Trip.route) ───────────────────────────────
-
-/** A stop as used in the UI — flattened from RouteStop */
 export interface Stop {
   id: string;
   name: string;
@@ -71,40 +41,52 @@ export interface Stop {
   order: number;
 }
 
+/** Shape returned by GET /trips (list) */
+export interface Trip {
+  id: string;
+  is_express: boolean;
+  origin: Location;
+  destination: Location;
+  departure_at: string;
+  arrival_at?: string;
+  currency: string;
+  available_seats: number;
+  total_seats: number;
+  company: TripCompany;
+  bus: TripBus;
+}
+
+/** Shape returned by GET /trips/:id (detail) — includes stops */
+export interface TripDetail extends Trip {
+  stops: Stop[];
+}
+
 // ─── Pricing ─────────────────────────────────────────────────────────────────
 
 export interface Price {
-  id: string;
-  route_id: string;
   boarding_stop_id: string;
   alighting_stop_id: string;
-  amount: number;           // RWF
-  boarding_stop: Location;
-  alighting_stop: Location;
+  amount: number;
+  currency: string;
 }
 
-// ─── Ticket (replaces Booking) ────────────────────────────────────────────────
+// ─── Ticket ──────────────────────────────────────────────────────────────────
 
-/** Response from POST /tickets — 202 Accepted */
+/** POST /tickets wallet — 201 immediately confirmed */
+export interface TicketConfirmed {
+  id: string;
+  status: 'confirmed';
+  amount: number;
+  currency: string;
+  seats_count: number;
+  payment_method: 'wallet';
+  boarding_stop: { id: string; name: string };
+  alighting_stop: { id: string; name: string };
+}
+
+/** POST /tickets MoMo — 202 SSE flow initiated */
 export interface TicketInitiated {
   ticket_id: string;
-}
-
-/** Full ticket object returned by GET /tickets/:id and SSE confirmed event */
-export interface Ticket {
-  id: string;
-  trip_id: string;
-  org_id: string;
-  user_id: string | null;
-  status: 'initiated' | 'payment_pending' | 'confirmed' | 'failed' | 'expired' | 'cancelled';
-  payment_method: 'cash' | 'wallet' | 'mtn' | 'airtel';
-  ticket_price: number;
-  seats_count: number;
-  passenger_name: string;
-  boarding_stop: Location;
-  alighting_stop: Location;
-  confirmed_at: string | null;
-  validated_at: string | null;
 }
 
 /** POST /tickets request body */
@@ -112,61 +94,86 @@ export interface TicketPayload {
   trip_id: string;
   boarding_stop_id: string;
   alighting_stop_id: string;
-  seats_count?: number;
-  /** Required for guest (MoMo/Airtel) bookings. Omit for wallet payments. */
-  payment_method?: 'mtn' | 'airtel';
-  /** Required for guest bookings */
+  seats_count: number;
+  payment_method?: 'mtn' | 'airtel' | 'wallet';
   phone?: string;
-  /** Required for guest bookings */
   passenger_name?: string;
 }
 
-// ─── SSE (ticket stream) ──────────────────────────────────────────────────────
+/** Full ticket from SSE confirmed event */
+export interface TicketFull {
+  id: string;
+  amount: number;
+  currency: string;
+  seats_count: number;
+  payment_method: string;
+  boarding_stop: { id: string; name: string };
+  alighting_stop: { id: string; name: string };
+  departure_at?: string;
+  company?: { name: string; logo_path: string | null };
+  bus?: { plate: string };
+  passenger_name?: string;
+  passenger_phone?: string;
+}
 
+/** SSE event from GET /tickets/:id/stream */
 export interface TicketSSEEvent {
-  status: 'pending' | 'confirmed' | 'failed' | 'expired' | 'timeout';
-  ticket?: Ticket;
+  status: 'pending' | 'confirmed' | 'failed' | 'timeout';
+  ticket?: TicketFull;
   message?: string;
+  reason?: string;
+  retryable?: boolean;
 }
 
 // ─── Wallet ──────────────────────────────────────────────────────────────────
 
 export interface WalletBalance {
-  balance: number;
+  available: number;
   currency: string;
 }
 
-/** POST /users/me/wallet/topup request body */
-export interface TopUpPayload {
+/** Transaction from GET /users/me/wallet/transactions */
+export interface WalletTransaction {
+  id: string;
+  type: 'topup' | 'payment';
   amount: number;
-  phone_number: string;
-  provider: 'mtn_momo' | 'airtel_money';
+  currency: string;
+  status: 'confirmed' | 'failed' | 'pending';
+  description: string;
+  created_at: string;
 }
 
-/** POST /users/me/wallet/topup response — 202 Accepted */
+export interface WalletTransactionsResponse {
+  data: WalletTransaction[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+/** POST /users/me/wallet/topup request */
+export interface TopUpPayload {
+  amount: number;
+  payment_method: 'mtn' | 'airtel';
+  phone?: string;
+}
+
+/** POST /users/me/wallet/topup response — 202 */
 export interface TopUpInitiated {
   topup_id: string;
 }
 
 /** SSE event from GET /users/me/wallet/topup/:id/stream */
 export interface TopUpSSEEvent {
-  type: 'topup.completed' | 'topup.failed';
-  topup_id: string;
-  user_id: string;
-  amount: number;
+  status: 'pending' | 'confirmed' | 'failed' | 'timeout';
+  amount?: number;
+  currency?: string;
   new_balance?: number;
+  message?: string;
   reason?: string;
   retryable?: boolean;
 }
 
 // ─── Generic ─────────────────────────────────────────────────────────────────
-
-export interface PaginatedTrips {
-  trips: Trip[];
-  total: number;
-  page: number;
-  limit: number;
-}
 
 export interface PaginatedResponse<T> {
   data: T[];
@@ -177,11 +184,10 @@ export interface PaginatedResponse<T> {
 
 // ─── Service param types ──────────────────────────────────────────────────────
 
-/** Passenger search params for GET /trips */
 export interface GetTripsParams {
   boarding_stop_id?: string;
   alighting_stop_id?: string;
-  date?: string;           // YYYY-MM-DD
+  date?: string;
   seats?: number;
   page?: number;
   limit?: number;
@@ -193,12 +199,19 @@ export interface GetOrganizationsParams {
   limit?: number;
 }
 
+export interface GetTransactionsParams {
+  page?: number;
+  limit?: number;
+  type?: 'topup' | 'payment';
+}
+
 // ─── Auth ─────────────────────────────────────────────────────────────────────
 
 export interface AuthUser {
   id: string;
   first_name: string;
   last_name: string;
+  phone_number?: string | null;
   user_type: 'passenger' | 'staff';
   avatar_path: string | null;
   org_id: string | null;
@@ -217,27 +230,11 @@ export interface AuthResponse {
   };
 }
 
-// ─── Legacy aliases (kept for backward compat with existing components) ───────
-// These map old field names to the new spec shapes.
+// ─── Trip list pagination ─────────────────────────────────────────────────────
 
-/** @deprecated Use TicketInitiated instead */
-export interface Booking {
-  booking_id: string;
-}
-
-/** @deprecated Use TicketPayload instead */
-export interface BookingPayload {
-  trip_id: string;
-  boarding_stop_id: string;
-  alighting_stop_id: string;
-  payment_method: 'mtn' | 'airtel' | 'wallet';
-  phone?: string;
-}
-
-/** @deprecated Use TicketSSEEvent instead */
-export interface SSEEvent {
-  status: 'pending' | 'confirmed' | 'failed' | 'timeout';
-  booking_id?: string;
-  message?: string;
-  reason?: string;
+export interface PaginatedTrips {
+  trips: Trip[];
+  total: number;
+  page: number;
+  limit: number;
 }

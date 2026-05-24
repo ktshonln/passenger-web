@@ -14,37 +14,35 @@ import Trips from "./pages/Trips";
 import TripDetail from "./pages/TripDetail";
 import Privacy from "./pages/Privacy";
 import Cookies from "./pages/Cookies";
+import Wallet from "./pages/Wallet";
 
 const App = () => {
   return (
-    <div>
-      <BrowserRouter>
+    <BrowserRouter>
       <Routes>
-      <Route path="/" element={<MainLayout />}>
-      <Route index element={<Home />} />
-      <Route path="signup" element={<Signup />} />
-      <Route path="login" element={<Login />} />
-      <Route path="forgot-password" element={<ForgotPassword />} />
-      <Route path="reset-password" element={<ResetPassword />} />
-      
-      {/* Protected Routes */}
-      <Route element={<ProtectedRoute />}>
-        <Route path="profile" element={<Profile />} />
-      </Route>
+        <Route path="/" element={<MainLayout />}>
+          <Route index element={<Home />} />
+          <Route path="signup" element={<Signup />} />
+          <Route path="login" element={<Login />} />
+          <Route path="forgot-password" element={<ForgotPassword />} />
+          <Route path="reset-password" element={<ResetPassword />} />
 
-      <Route path="trips" element={<Trips />} />
-      <Route path="trips/:id" element={<TripDetail />} />
-      <Route path="privacy" element={<Privacy />} />
-      <Route path="cookies" element={<Cookies />} />
+          {/* Protected Routes */}
+          <Route element={<ProtectedRoute />}>
+            <Route path="profile" element={<Profile />} />
+            <Route path="wallet" element={<Wallet />} />
+          </Route>
 
-      </Route>
-      <Route path="500" element={<InternalError />} />
-      <Route path="403" element={<Forbidden />} />
-      <Route path="*" element={<NotFound />} />
+          <Route path="trips" element={<Trips />} />
+          <Route path="trips/:id" element={<TripDetail />} />
+          <Route path="privacy" element={<Privacy />} />
+          <Route path="cookies" element={<Cookies />} />
+        </Route>
+        <Route path="500" element={<InternalError />} />
+        <Route path="403" element={<Forbidden />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
-      </BrowserRouter> 
-     
-    </div>
+    </BrowserRouter>
   );
 };
 

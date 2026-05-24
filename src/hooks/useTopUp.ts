@@ -6,12 +6,14 @@ import type { TopUpInitiated, TopUpPayload } from "../types";
 export const useTopUp = () => {
   const showToast = useToastStore((s) => s.showToast);
   return useMutation<TopUpInitiated, Error, TopUpPayload>({
-    mutationFn: (payload: TopUpPayload) => bookingService.topUpWallet(payload),
+    mutationFn: (payload) => bookingService.topUpWallet(payload),
     onError: (err: any) => {
-      showToast(
-        err?.response?.data?.error?.message || "Top-up initiation failed. Please try again.",
-        "error"
-      );
+      const code = err?.response?.data?.error?.code;
+      if (code === "INVALID_AMOUNT" || code === "INVALID_PHONE") {
+        // handled inline
+      } else {
+        showToast(err?.response?.data?.error?.message || "Top-up failed. Please try again.", "error");
+      }
     },
   });
 };

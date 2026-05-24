@@ -1,59 +1,91 @@
 import { http, HttpResponse, delay } from "msw";
 import { baseUrl } from "../../services/apiClient";
-import { tripsDb, tripsDetailDb } from "../db";
+
+const TRIPS: any[] = [
+  {
+    id: "trip-001", is_express: false,
+    origin: { id: "loc-kgl", name: "Kigali", lat: -1.9441, lng: 30.0619 },
+    destination: { id: "loc-mus", name: "Musanze", lat: -1.4990, lng: 29.6340 },
+    departure_at: "2026-06-01T07:00:00Z", arrival_at: "2026-06-01T09:30:00Z",
+    currency: "RWF", available_seats: 14, total_seats: 30,
+    company: { id: "org-volcano", name: "Volcano Express", logo_path: null, story: "Connecting Rwanda since 2005 with safe, reliable intercity bus services." },
+    bus: { id: "bus-001", plate: "RAA 001 A", type: "Coach" },
+    stops: [
+      { id: "loc-kgl", name: "Kigali", lat: -1.9441, lng: 30.0619, order: 1 },
+      { id: "loc-muh", name: "Muhanga", lat: -2.0833, lng: 29.7500, order: 2 },
+      { id: "loc-mus", name: "Musanze", lat: -1.4990, lng: 29.6340, order: 3 },
+    ],
+  },
+  {
+    id: "trip-002", is_express: true,
+    origin: { id: "loc-kgl", name: "Kigali", lat: -1.9441, lng: 30.0619 },
+    destination: { id: "loc-huy", name: "Huye", lat: -2.5960, lng: 29.7390 },
+    departure_at: "2026-06-01T09:00:00Z", arrival_at: "2026-06-01T12:00:00Z",
+    currency: "RWF", available_seats: 20, total_seats: 45,
+    company: { id: "org-ritco", name: "RITCO", logo_path: null, story: "Rwanda Integrated Transport Company — serving the nation." },
+    bus: { id: "bus-003", plate: "RAB 010 C", type: "Minibus" },
+    stops: [
+      { id: "loc-kgl", name: "Kigali", lat: -1.9441, lng: 30.0619, order: 1 },
+      { id: "loc-huy", name: "Huye", lat: -2.5960, lng: 29.7390, order: 2 },
+    ],
+  },
+  {
+    id: "trip-003", is_express: false,
+    origin: { id: "loc-kgl", name: "Kigali", lat: -1.9441, lng: 30.0619 },
+    destination: { id: "loc-rub", name: "Rubavu", lat: -1.6800, lng: 29.3600 },
+    departure_at: "2026-06-01T08:00:00Z", arrival_at: "2026-06-01T11:00:00Z",
+    currency: "RWF", available_seats: 0, total_seats: 30,
+    company: { id: "org-volcano", name: "Volcano Express", logo_path: null, story: "Connecting Rwanda since 2005." },
+    bus: { id: "bus-002", plate: "RAA 002 B", type: "Coach" },
+    stops: [
+      { id: "loc-kgl", name: "Kigali", lat: -1.9441, lng: 30.0619, order: 1 },
+      { id: "loc-muh", name: "Muhanga", lat: -2.0833, lng: 29.7500, order: 2 },
+      { id: "loc-mus", name: "Musanze", lat: -1.4990, lng: 29.6340, order: 3 },
+      { id: "loc-rub", name: "Rubavu", lat: -1.6800, lng: 29.3600, order: 4 },
+    ],
+  },
+];
+
+const PRICES: Record<string, any> = {
+  "loc-kgl:loc-muh": { boarding_stop_id: "loc-kgl", alighting_stop_id: "loc-muh", amount: 1000, currency: "RWF" },
+  "loc-kgl:loc-mus": { boarding_stop_id: "loc-kgl", alighting_stop_id: "loc-mus", amount: 2500, currency: "RWF" },
+  "loc-muh:loc-mus": { boarding_stop_id: "loc-muh", alighting_stop_id: "loc-mus", amount: 1500, currency: "RWF" },
+  "loc-kgl:loc-huy": { boarding_stop_id: "loc-kgl", alighting_stop_id: "loc-huy", amount: 3000, currency: "RWF" },
+  "loc-kgl:loc-rub": { boarding_stop_id: "loc-kgl", alighting_stop_id: "loc-rub", amount: 3500, currency: "RWF" },
+  "loc-kgl:loc-muh:loc-mus:loc-rub": { boarding_stop_id: "loc-muh", alighting_stop_id: "loc-rub", amount: 2500, currency: "RWF" },
+  "loc-muh:loc-rub": { boarding_stop_id: "loc-muh", alighting_stop_id: "loc-rub", amount: 2500, currency: "RWF" },
+  "loc-mus:loc-rub": { boarding_stop_id: "loc-mus", alighting_stop_id: "loc-rub", amount: 1000, currency: "RWF" },
+};
 
 export const tripHandlers = [
-  // Detail route MUST be before the list route
   http.get(`${baseUrl}/trips/:id`, async ({ params }) => {
     await delay(300);
-    const detail = tripsDetailDb[params.id as string];
-    if (!detail) {
-      return HttpResponse.json({ error: { code: "TRIP_NOT_FOUND", message: "Trip not found" } }, { status: 404 });
-    }
-    // Spec: GET /trips/:id returns { trip: Trip }
-    return HttpResponse.json({ trip: detail }, { status: 200 });
+    const trip = TRIPS.find((t) => t.id === params.id);
+    if (!trip) return HttpResponse.json({ error: { code: "TRIP_NOT_FOUND" } }, { status: 404 });
+    return HttpResponse.json(trip);
   }),
 
   http.get(`${baseUrl}/trips`, async ({ request }) => {
     await delay(400);
     const url = new URL(request.url);
+    const boarding = url.searchParams.get("boarding_stop_id");
+    const alighting = url.searchParams.get("alighting_stop_id");
+    let results = [...TRIPS];
+    if (boarding) results = results.filter((t) => t.stops?.some((s: any) => s.id === boarding));
+    if (alighting) results = results.filter((t) => t.stops?.some((s: any) => s.id === alighting));
+    results.sort((a, b) => new Date(a.departure_at).getTime() - new Date(b.departure_at).getTime());
+    return HttpResponse.json({ trips: results, total: results.length, page: 1, limit: 20 });
+  }),
 
-    // Passenger search params (spec-aligned)
-    const boarding_stop_id = url.searchParams.get("boarding_stop_id");
-    const alighting_stop_id = url.searchParams.get("alighting_stop_id");
-    const date = url.searchParams.get("date");
-    const page = parseInt(url.searchParams.get("page") ?? "1");
-    const limit = parseInt(url.searchParams.get("limit") ?? "20");
-
-    let results = [...tripsDb];
-
-    // Filter by boarding/alighting stop if provided
-    if (boarding_stop_id) {
-      results = results.filter((t) =>
-        t.route.route_stops.some((rs) => rs.stop.id === boarding_stop_id)
-      );
-    }
-    if (alighting_stop_id) {
-      results = results.filter((t) =>
-        t.route.route_stops.some((rs) => rs.stop.id === alighting_stop_id)
-      );
-    }
-    if (date) {
-      results = results.filter((t) => t.departure_at.startsWith(date));
-    }
-
-    // Only show scheduled/active trips for passenger search
-    results = results.filter((t) => t.status === "scheduled" || t.status === "active");
-
-    // Sort by departure_at ascending
-    results.sort(
-      (a, b) => new Date(a.departure_at).getTime() - new Date(b.departure_at).getTime()
-    );
-
-    const total = results.length;
-    const paginated = results.slice((page - 1) * limit, page * limit);
-
-    // Spec: PaginatedTrips = { trips: [...], total, page, limit }
-    return HttpResponse.json({ trips: paginated, total, page, limit }, { status: 200 });
+  http.get(`${baseUrl}/prices`, async ({ request }) => {
+    await delay(200);
+    const url = new URL(request.url);
+    const boarding = url.searchParams.get("boarding_stop_id");
+    const alighting = url.searchParams.get("alighting_stop_id");
+    if (!boarding || !alighting) return HttpResponse.json({ error: { code: "MISSING_PARAMS" } }, { status: 400 });
+    const key = `${boarding}:${alighting}`;
+    const price = PRICES[key];
+    if (!price) return HttpResponse.json({ error: { code: "PRICE_NOT_FOUND" } }, { status: 404 });
+    return HttpResponse.json(price);
   }),
 ];

@@ -4,7 +4,7 @@ import i18n from "./i18n";
 import { useTranslation } from "react-i18next";
 import { useState, useRef, useEffect } from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
-import { BiSolidUserCircle } from "react-icons/bi";
+import { BiSolidUserCircle, BiSolidWallet } from "react-icons/bi";
 import { FiChevronDown, FiUser, FiLogOut } from "react-icons/fi";
 import { useUser } from "./hooks/useUser";
 import { useLogout } from "./hooks/useAuth";
@@ -34,7 +34,7 @@ const MainLayout = () => {
   }, []);
 
   return (
-    <div className={`overflow-x-hidden min-h-screen flex flex-col font-inter transition-colors duration-300 ${isHome ? 'bg-gradient-to-br from-brand to-[#1E99FF] text-white' : 'bg-[#F8FAFC] dark:bg-[#0B1120] text-gray-900 dark:text-gray-100'}`}>
+    <div className={`overflow-x-clip min-h-screen flex flex-col font-inter transition-colors duration-300 ${isHome ? 'bg-gradient-to-br from-brand to-[#1E99FF] text-white' : 'bg-[#F8FAFC] dark:bg-[#0B1120] text-gray-900 dark:text-gray-100'}`}>
       <header className={`sticky top-0 z-50 transition-all duration-300 border-b ${isHome ? 'bg-white/0 text-white border-white/0 shadow-none backdrop-blur-none' : 'bg-white/80 dark:bg-[#111827]/80 backdrop-blur-xl border-gray-100 dark:border-white/5 shadow-sm'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-wrap justify-between items-center min-h-[6rem] py-4 gap-y-4">
@@ -111,6 +111,13 @@ const MainLayout = () => {
                     >
                       <FiUser size={16} /> Profile
                     </Link>
+                    <Link
+                      to="/wallet"
+                      onClick={() => setShowProfileMenu(false)}
+                      className="flex items-center gap-3 px-5 py-2.5 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-brand/5 dark:hover:bg-brand/10 hover:text-brand transition-colors"
+                    >
+                      <BiSolidWallet size={16} /> Wallet
+                    </Link>
                     <button
                       onClick={() => {
                         setShowProfileMenu(false);
@@ -137,7 +144,7 @@ const MainLayout = () => {
         </div>
       </header>
 
-      <main className="flex-grow flex flex-col relative z-20">
+      <main className="flex-grow flex flex-col">
         <Outlet />
       </main>
 

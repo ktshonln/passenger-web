@@ -48,22 +48,22 @@ axiosInstance.interceptors.response.use(
             }
 
             // Intercept catastrophic system faults (500)
-            if (status === 500) {
+            // Exclude public passenger-facing endpoints — a 500 on locations/trips/prices
+            // should degrade gracefully (empty results) rather than crash the whole page.
+            const isPublicEndpoint =
+                url.includes('/trips') ||
+                url.includes('/locations') ||
+                url.includes('/prices') ||
+                url.includes('/organizations');
+
+            if (status === 500 && !isPublicEndpoint) {
                 window.location.href = '/500';
             }
             // Intercept permission zone violations (403), except for:
             // - Auth requests (handled inline by forms)
-            // - Public passenger-facing endpoints that should show page-level errors
-            //   rather than a hard redirect (trips, locations, prices, organizations)
-            else if (status === 403 && !isAuthReq) {
-                const isPublicEndpoint =
-                    url.includes('/trips') ||
-                    url.includes('/locations') ||
-                    url.includes('/prices') ||
-                    url.includes('/organizations');
-                if (!isPublicEndpoint) {
-                    window.location.href = '/403';
-                }
+            // - Public passenger-facing endpoints
+            else if (status === 403 && !isAuthReq && !isPublicEndpoint) {
+                window.location.href = '/403';
             }
         }
         return Promise.reject(error);

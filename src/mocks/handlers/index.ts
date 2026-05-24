@@ -6,6 +6,7 @@ import { tripHandlers } from "./trips";
 import { organizationHandlers } from "./organizations";
 import { bookingHandlers } from "./bookings";
 import { walletHandlers } from "./wallet";
+import { printHandlers } from "./print";
 import { corsHeaders } from "./utils";
 
 export const handlers = [
@@ -17,4 +18,5 @@ export const handlers = [
   ...organizationHandlers,
   ...bookingHandlers,
   ...walletHandlers,
+  ...printHandlers,
 ];

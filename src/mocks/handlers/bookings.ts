@@ -1,14 +1,32 @@
 import { http, HttpResponse, delay } from "msw";
 import { baseUrl } from "../../services/apiClient";
+import { mockSessions } from "../db";
 
 const encodeSSE = (data: object) => `data: ${JSON.stringify(data)}\n\n`;
+
+/** Read access_token from Cookie header and resolve to a userId */
+const getAuthUserId = (request: Request): string | null => {
+  const cookieHeader = request.headers.get("cookie") ?? "";
+  // Cookie header format: "key=value; key2=value2"
+  const pairs = cookieHeader.split(";").map((p) => p.trim());
+  for (const pair of pairs) {
+    const eqIdx = pair.indexOf("=");
+    if (eqIdx === -1) continue;
+    const key = pair.slice(0, eqIdx).trim();
+    const val = pair.slice(eqIdx + 1).trim();
+    if (key === "access_token") {
+      return mockSessions[val] ?? null;
+    }
+  }
+  return null;
+};
 
 export const bookingHandlers = [
   http.post(`${baseUrl}/tickets`, async ({ request }) => {
     await delay(500);
     const body = (await request.json()) as any;
-    const cookies = request.headers.get("cookie") ?? "";
-    const isAuth = cookies.includes("mock_jwt");
+    const userId = getAuthUserId(request);
+    const isAuth = Boolean(userId);
 
     if (body.trip_id === "trip-003") {
       return HttpResponse.json({ error: { code: "NO_SEATS_AVAILABLE", available: 0 } }, { status: 400 });

@@ -13,6 +13,7 @@ import { useToastStore } from '../stores/toastStore';
 import { openTicketStream } from '../utils/sseClient';
 import { getCdnUrl } from '../utils/media';
 import StopsMap from '../components/StopsMap';
+import PrintTicket from '../components/PrintTicket';
 import type { Stop, TicketConfirmed, TicketFull } from '../types';
 
 type FlowState = 'idle' | 'sheet' | 'momo-waiting' | 'success' | 'failed' | 'timeout';
@@ -444,6 +445,7 @@ const TripDetail = () => {
             </div>
           </div>
           <button onClick={() => navigate('/trips')} className="w-full max-w-sm bg-brand text-white py-3.5 rounded-xl font-bold text-sm hover:bg-brand/90 active:scale-95 transition-all">Done</button>
+          <PrintTicket ticketId={'id' in confirmedTicket ? confirmedTicket.id : ''} />
         </div>
       )}
     </div>

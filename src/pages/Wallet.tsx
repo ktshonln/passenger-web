@@ -152,7 +152,7 @@ const Wallet = () => {
 
   const mins = String(Math.floor(countdown / 60)).padStart(2, '0');
   const secs = String(countdown % 60).padStart(2, '0');
-  const totalPages = txData ? Math.ceil(txData.total / limit) : 1;
+  const totalPages = txData ? Math.ceil((txData.total ?? 0) / limit) : 1;
 
   return (
     // overflow-auto on the page root so sticky works; portals render outside this
@@ -210,7 +210,7 @@ const Wallet = () => {
             <div className="space-y-3">
               {[0, 1, 2].map((i) => <div key={i} className="h-16 rounded-2xl bg-gray-200 dark:bg-gray-700 animate-pulse" />)}
             </div>
-          ) : !txData?.data.length ? (
+          ) : !txData?.data?.length ? (
             <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
               <BiSolidWallet size={40} className="text-gray-300 dark:text-gray-600" />
               <p className="text-gray-500 dark:text-gray-400 text-sm font-semibold">No transactions yet</p>
@@ -218,7 +218,7 @@ const Wallet = () => {
             </div>
           ) : (
             <div className="space-y-2">
-              {txData.data.map((tx) => (
+              {(txData?.data ?? []).map((tx) => (
                 <div
                   key={tx.id}
                   className={`bg-white dark:bg-[#111827] rounded-2xl border border-gray-100 dark:border-white/5 p-4 flex items-center gap-3 ${tx.status === 'failed' ? 'opacity-50' : ''}`}
@@ -243,7 +243,7 @@ const Wallet = () => {
             </div>
           )}
 
-          {txData && txData.total > 0 && (
+          {txData && (txData.total ?? 0) > 0 && (
             <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100 dark:border-white/5">
               <p className="text-xs text-gray-400 dark:text-gray-600">{txData.total} total</p>
               <div className="flex items-center gap-2">

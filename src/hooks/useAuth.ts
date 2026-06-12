@@ -15,7 +15,17 @@ export const useLogin = () => {
         showToast("Successfully logged in!", "success");
       }
     },
-    onError: (err: any) => showToast(err?.response?.data?.error?.message || err?.response?.data?.message || "Login failed", "error")
+    onError: (err: any) => {
+      const code = err?.response?.data?.error?.code;
+      const friendlyMessages: Record<string, string> = {
+        INVALID_CREDENTIALS: "Incorrect phone/email or password.",
+        PHONE_LOGIN_REQUIRED: "Please log in with your phone number.",
+        EMAIL_LOGIN_REQUIRED: "Please log in with your email address.",
+        ACCOUNT_SUSPENDED: "Your account has been suspended. Contact support.",
+        VALIDATION_ERROR: "Please check your login details.",
+      };
+      showToast(friendlyMessages[code] ?? "Login failed. Please try again.", "error");
+    }
   });
 };
 
@@ -23,8 +33,15 @@ export const useRegister = () => {
   const showToast = useToastStore(s => s.showToast);
   return useMutation({
     mutationFn: (data: RegisterPayload) => authService.register(data),
-    onSuccess: () => showToast("Account mapped. Please verify phone.", "success"),
-    onError: (err: any) => showToast(err?.response?.data?.message || "Registration failed", "error")
+    onSuccess: () => showToast("Account created. Please verify your phone.", "success"),
+    onError: (err: any) => {
+      const code = err?.response?.data?.error?.code ?? err?.response?.data?.code;
+      if (code === 'PHONE_ALREADY_EXISTS' || err?.response?.status === 409) {
+        showToast("An account with this phone number already exists.", "error");
+      } else {
+        showToast("Registration failed. Please try again.", "error");
+      }
+    }
   });
 };
 
@@ -35,7 +52,7 @@ export const useVerifyPhone = () => {
     onSuccess: () => {
       showToast("Phone verified! Please log in.", "success");
     },
-    onError: (err: any) => showToast(err?.response?.data?.message || "Verification failed", "error")
+    onError: () => showToast("Invalid or expired OTP. Please try again.", "error")
   });
 };
 
@@ -48,7 +65,7 @@ export const useVerifyLogin = () => {
       queryClient.setQueryData(CACHE_KEY_USER, res.user);
       showToast("Successfully logged in!", "success");
     },
-    onError: (err: any) => showToast(err?.response?.data?.message || "Verification failed", "error")
+    onError: () => showToast("Invalid or expired OTP. Please try again.", "error")
   });
 };
 
@@ -61,7 +78,7 @@ export const useVerify2FA = () => {
       queryClient.setQueryData(CACHE_KEY_USER, res.user);
       showToast("Successfully logged in!", "success");
     },
-    onError: (err: any) => showToast(err?.response?.data?.message || "Verification failed", "error")
+    onError: () => showToast("Invalid or expired OTP. Please try again.", "error")
   });
 };
 
@@ -88,7 +105,7 @@ export const useResetPassword = () => {
   return useMutation({
     mutationFn: (data: ResetPasswordPayload) => authService.resetPassword(data),
     onSuccess: () => showToast("Password updated. Please log in again.", "success"),
-    onError: (err: any) => showToast(err?.response?.data?.message || "Reset failed", "error")
+    onError: () => showToast("Password reset failed. The OTP may have expired.", "error")
   });
 };
 

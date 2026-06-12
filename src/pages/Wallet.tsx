@@ -144,7 +144,7 @@ const Wallet = () => {
         onError: (err: any) => {
           const code = err?.response?.data?.error?.code;
           if (code === 'INVALID_AMOUNT') setAmountError('Minimum top up amount is RWF 500');
-          else if (code === 'INVALID_PHONE') setPhoneError('Please enter a valid phone number');
+          else if (code === 'INVALID_PHONE' || code === 'VALIDATION_ERROR') setPhoneError('Please enter a valid phone number');
         },
       }
     );

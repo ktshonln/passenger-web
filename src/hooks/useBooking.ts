@@ -17,7 +17,7 @@ export const useCreateTicket = () => {
       } else if (code === "INSUFFICIENT_WALLET_BALANCE") {
         // handled inline — no toast
       } else {
-        showToast(err?.response?.data?.error?.message || "Booking failed. Please try again.", "error");
+        showToast("Booking failed. Please try again.", "error");
       }
     },
   });

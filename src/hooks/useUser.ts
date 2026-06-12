@@ -24,7 +24,7 @@ export const useUpdateUser = () => {
       showToast("Profile updated successfully!", "success");
     },
     onError: (error: any) => {
-      showToast(error?.response?.data?.message || "Failed to update profile", "error");
+      showToast(error?.response?.data?.error?.message || "Failed to update profile. Please try again.", "error");
     },
   });
 };
@@ -38,7 +38,12 @@ export const useChangePassword = () => {
       showToast("Password securely updated!", "success");
     },
     onError: (error: any) => {
-      showToast(error?.response?.data?.message || "Failed to update password", "error");
+      const code = error?.response?.data?.error?.code;
+      if (code === 'INCORRECT_PASSWORD') {
+        showToast("Current password is incorrect.", "error");
+      } else {
+        showToast("Failed to update password. Please try again.", "error");
+      }
     },
   });
 };

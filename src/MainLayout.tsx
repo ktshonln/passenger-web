@@ -10,6 +10,7 @@ import { useUser } from "./hooks/useUser";
 import { useLogout } from "./hooks/useAuth";
 import { getCdnUrl } from "./utils/media";
 import ConsentBanner from "./components/ConsentBanner";
+import ErrorBoundary from "./components/ErrorBoundary";
 
 const MainLayout = () => {
   const { t } = useTranslation();
@@ -145,7 +146,9 @@ const MainLayout = () => {
       </header>
 
       <main className="flex-grow flex flex-col">
-        <Outlet />
+        <ErrorBoundary>
+          <Outlet />
+        </ErrorBoundary>
       </main>
 
       <footer className={`${isHome ? 'bg-brand' : 'bg-white dark:bg-[#0B1120] border-t border-gray-100 dark:border-white/5'} py-10 mt-auto transition-colors duration-300 relative z-10`}>

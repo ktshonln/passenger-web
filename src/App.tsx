@@ -15,10 +15,12 @@ import TripDetail from "./pages/TripDetail";
 import Privacy from "./pages/Privacy";
 import Cookies from "./pages/Cookies";
 import Wallet from "./pages/Wallet";
+import ErrorBoundary from "./components/ErrorBoundary";
 
 const App = () => {
   return (
-    <BrowserRouter>
+    <ErrorBoundary>
+      <BrowserRouter>
       <Routes>
         <Route path="/" element={<MainLayout />}>
           <Route index element={<Home />} />
@@ -43,6 +45,7 @@ const App = () => {
         <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
+    </ErrorBoundary>
   );
 };
 

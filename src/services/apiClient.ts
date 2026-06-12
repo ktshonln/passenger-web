@@ -18,13 +18,13 @@ axiosInstance.interceptors.response.use(
             const isAuthReq = url.includes('/auth/');
 
             // Catch explicit 401 Unauthorized token expiries and attempt to auto-refresh silently.
-            // Exclude endpoints that are legitimately 401 for unauthenticated users — these are
-            // auth probes or guest-accessible endpoints, not expired-token scenarios:
-            //   /users/me      — used in MainLayout to check if user is logged in
-            //   /users/me/wallet — only meaningful when authenticated; 401 = not logged in
+            // Only exclude the refresh endpoint itself (would cause infinite loop) and
+            // auth login endpoint (user deliberately sent wrong credentials).
+            // /users/me IS included so an expired token on page load triggers a refresh
+            // rather than immediately kicking the user out.
             const isAuthProbe =
-                url.includes('/users/me') ||
-                url.includes('/wallet');
+                url.includes('/wallet/topup') || // topup SSE stream — 401 = not logged in, don't loop
+                url.includes('/wallet/transactions'); // same
 
             if (
                 status === 401 &&
@@ -36,10 +36,10 @@ axiosInstance.interceptors.response.use(
                 originalRequest._retry = true;
                 try {
                     await axiosInstance.post('/auth/refresh');
-                    // Cookie tokens securely rotated! Resume the paused blocked request quietly:
+                    // Cookie tokens securely rotated — resume the paused request:
                     return axiosInstance(originalRequest);
                 } catch (err) {
-                    // Refresh explicitly failed (token revoked/hard expired). Fallback to login boundary
+                    // Refresh failed (token revoked or hard-expired) — go to login
                     if (window.location.pathname !== '/login' && window.location.pathname !== '/signup') {
                         window.location.href = '/login';
                     }

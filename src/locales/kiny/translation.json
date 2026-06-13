@@ -58,7 +58,7 @@
   "topUpWallet": "Ongera Ikofi",
   "confirmTopUp": "Emeza kongeraho",
   "amount": "Umubare (RWF)",
-  "amountMin": "Nibura 500 RWF",
+  "amountMin": "Nibura 100 RWF",
   "paymentMethod": "Uburyo bwo kwishyura",
   "phoneNumber": "Nimero ya telefone",
   "processing": "Biritunganywa…",

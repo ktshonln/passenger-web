@@ -58,7 +58,7 @@
   "topUpWallet": "Recharger le portefeuille",
   "confirmTopUp": "Confirmer la recharge",
   "amount": "Montant (RWF)",
-  "amountMin": "Minimum 500 RWF",
+  "amountMin": "Minimum 100 RWF",
   "paymentMethod": "Moyen de paiement",
   "phoneNumber": "Numéro de téléphone",
   "processing": "Traitement en cours…",

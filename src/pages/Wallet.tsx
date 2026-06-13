@@ -300,7 +300,7 @@ const Wallet = () => {
                 </label>
                 <input
                   type="number"
-                  min={500}
+                  min={100}
                   value={amount}
                   onChange={(e) => { setAmount(e.target.value); setAmountError(''); }}
                   placeholder={t('amountMin')}

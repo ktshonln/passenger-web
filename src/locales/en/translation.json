@@ -58,7 +58,7 @@
   "topUpWallet": "Top Up Wallet",
   "confirmTopUp": "Confirm Top Up",
   "amount": "Amount (RWF)",
-  "amountMin": "Minimum 500 RWF",
+  "amountMin": "Minimum 100 RWF",
   "paymentMethod": "Payment method",
   "phoneNumber": "Phone number",
   "processing": "Processing…",

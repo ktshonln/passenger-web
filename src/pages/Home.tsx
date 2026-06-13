@@ -6,8 +6,10 @@ import useLocations from "../hooks/useLocations";
 import { BsTicketFill } from "react-icons/bs";
 import LogoName from "../components/LogoName";
 import type { Location } from "../types";
+import { useTranslation } from "react-i18next";
 
 function Home() {
+  const {t} = useTranslation();
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [isFocused, setIsFocused] = useState(false);
@@ -90,7 +92,7 @@ function Home() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onFocus={() => setIsFocused(true)}
-              placeholder="Murifuza kujya he?"
+              placeholder={t('searchPlaceholder', 'Where would you like to go?')}
               className="w-full outline-none bg-transparent text-gray-900 text-xl placeholder-gray-400 ml-4 py-3 border-none ring-0 focus:ring-0"
             />
           </form>
@@ -130,7 +132,7 @@ function Home() {
         </div>
 
         <p className="mt-8 text-white/90 text-center text-sm md:text-base max-w-lg tracking-wide">
-          Shyiramo akarere wifuza kujyamo, maze ugure itike utavuye aho uri!
+          {t('explainer', 'Shyiramo akarere wifuza kujyamo, maze ugure itike utavuye aho uri!')}
         </p>
       </div>
     </div>

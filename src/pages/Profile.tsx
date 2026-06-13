@@ -103,9 +103,9 @@ export default function Profile() {
   };
 
   const tabs = [
-    { id: "personal", label: "Personal Info", icon: <FiUser size={18} /> },
-    { id: "security", label: "Security", icon: <FiLock size={18} /> },
-    { id: "preferences", label: "Preferences", icon: <FiBell size={18} /> },
+    { id: "personal", label: t('personalInfo'), icon: <FiUser size={18} /> },
+    { id: "security", label: t('security'), icon: <FiLock size={18} /> },
+    { id: "preferences", label: t('preferences'), icon: <FiBell size={18} /> },
   ];
 
   if (isLoading) {
@@ -124,8 +124,8 @@ export default function Profile() {
 
       <div className="max-w-5xl mx-auto px-4 pt-10 relative">
         <header className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">Account Settings</h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1 text-sm md:text-base">Manage your profile, security, and preferences seamlessly.</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">{t('profileTitle')}</h1>
+          <p className="text-gray-500 dark:text-gray-400 mt-1 text-sm md:text-base">{t('preferences', 'Manage your profile, security, and preferences seamlessly.')}</p>
         </header>
 
         <div className="flex flex-col md:flex-row gap-6 items-start">
@@ -165,7 +165,7 @@ export default function Profile() {
               <div className="animate-fade-in">
                 <div className="flex items-center gap-3 mb-8 pb-5 border-b border-gray-100 dark:border-white/10">
                   <div className="p-2.5 bg-brand/10 rounded-xl text-brand"><FiUser size={20} /></div>
-                  <h2 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white tracking-tight">Personal Information</h2>
+                  <h2 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white tracking-tight">{t('personalInfo')}</h2>
                 </div>
 
                 <div className="flex flex-col lg:flex-row gap-8 items-start">
@@ -228,7 +228,7 @@ export default function Profile() {
                         disabled={updateUser.isPending}
                         className={`bg-brand text-white px-6 py-2.5 rounded-xl font-semibold shadow-md border border-brand hover:border-brand/80 hover:bg-brand/90 transition-all w-full sm:w-auto text-sm ${updateUser.isPending ? 'opacity-70 cursor-not-allowed' : 'active:scale-95 hover:-translate-y-0.5 shadow-brand/20 hover:shadow-lg'}`}
                       >
-                        {updateUser.isPending ? "Saving..." : t('profileSubmit', 'Save Changes')}
+                        {updateUser.isPending ? "Saving..." : t('profileSubmit')}
                       </button>
                     </div>
                   </form>
@@ -241,22 +241,22 @@ export default function Profile() {
               <div className="animate-fade-in">
                 <div className="flex items-center gap-3 mb-8 pb-5 border-b border-gray-100 dark:border-white/10">
                   <div className="p-2.5 bg-brand/10 rounded-xl text-brand"><BiShieldQuarter size={20} /></div>
-                  <h2 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white tracking-tight">Security Settings</h2>
+                  <h2 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white tracking-tight">{t('security')}</h2>
                 </div>
 
                 <form className="max-w-md space-y-5" onSubmit={handlePasswordSubmit}>
                   <div className="group">
-                    <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1.5 transition-colors group-focus-within:text-brand">Current Password</label>
+                    <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1.5 transition-colors group-focus-within:text-brand">{t('currentPassword')}</label>
                     <input type="password" required placeholder="••••••••" value={passwords.current} onChange={(e) => setPasswords({ ...passwords, current: e.target.value })} className="w-full px-4 py-3 text-sm rounded-xl border border-gray-200 dark:border-neutral-700 bg-gray-50/50 dark:bg-[#1F2937]/50 text-gray-900 dark:text-white focus:bg-white dark:focus:bg-[#111827] focus:border-brand/50 focus:ring-2 focus:ring-brand/20 transition-all outline-none" />
                   </div>
 
                   <div className="pt-5 mt-5 border-t border-gray-100 dark:border-white/5 space-y-5">
                     <div className="group">
-                      <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1.5 transition-colors group-focus-within:text-brand">New Password</label>
+                      <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1.5 transition-colors group-focus-within:text-brand">{t('newPassword')}</label>
                       <input type="password" required placeholder="••••••••" value={passwords.new} onChange={(e) => setPasswords({ ...passwords, new: e.target.value })} className="w-full px-4 py-3 text-sm rounded-xl border border-gray-200 dark:border-neutral-700 bg-gray-50/50 dark:bg-[#1F2937]/50 text-gray-900 dark:text-white focus:bg-white dark:focus:bg-[#111827] focus:border-brand/50 focus:ring-2 focus:ring-brand/20 transition-all outline-none" />
                     </div>
                     <div className="group">
-                      <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1.5 transition-colors group-focus-within:text-brand">Confirm New Password</label>
+                      <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1.5 transition-colors group-focus-within:text-brand">{t('confirmNewPassword')}</label>
                       <input type="password" required placeholder="••••••••" value={passwords.confirm} onChange={(e) => setPasswords({ ...passwords, confirm: e.target.value })} className="w-full px-4 py-3 text-sm rounded-xl border border-gray-200 dark:border-neutral-700 bg-gray-50/50 dark:bg-[#1F2937]/50 text-gray-900 dark:text-white focus:bg-white dark:focus:bg-[#111827] focus:border-brand/50 focus:ring-2 focus:ring-brand/20 transition-all outline-none" />
                     </div>
                   </div>
@@ -267,7 +267,7 @@ export default function Profile() {
                       disabled={changePassword.isPending}
                       className={`bg-brand text-white px-8 py-3 rounded-xl font-bold shadow-md w-full sm:w-auto text-sm transition-all border border-brand hover:border-brand/80 ${changePassword.isPending ? 'opacity-70 cursor-not-allowed' : 'shadow-brand/20 hover:shadow-lg hover:bg-brand/90 hover:-translate-y-0.5 active:scale-95'}`}
                     >
-                      {changePassword.isPending ? "Updating..." : "Update Password"}
+                      {changePassword.isPending ? "Updating..." : t('updatePassword')}
                     </button>
                   </div>
                 </form>
@@ -275,8 +275,8 @@ export default function Profile() {
                 <div className="max-w-md pt-5 space-y-4">
                   <div className="flex items-center justify-between p-4 bg-gray-50/50 dark:bg-[#1F2937]/50 rounded-2xl cursor-pointer transition-colors border border-transparent hover:border-gray-200 dark:hover:border-gray-700" onClick={() => updateUser.mutate({ two_factor_enabled: !user?.two_factor_enabled })}>
                     <div className="pr-4">
-                      <h4 className="font-semibold text-gray-900 dark:text-gray-100 text-sm">Two-Factor Authentication</h4>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Secure your account with an OTP on every login.</p>
+                      <h4 className="font-semibold text-gray-900 dark:text-gray-100 text-sm">{t('twoFactor')}</h4>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{t('twoFactorDesc')}</p>
                     </div>
                     <div className={`w-12 h-6 shrink-0 flex items-center rounded-full p-1 transition-colors duration-300 ${user?.two_factor_enabled ? 'bg-brand' : 'bg-gray-300 dark:bg-gray-600'}`}>
                       <div className={`bg-white w-4 h-4 rounded-full shadow-sm transform transition-transform duration-300 ${user?.two_factor_enabled ? 'translate-x-6' : 'translate-x-0'}`}></div>
@@ -292,13 +292,13 @@ export default function Profile() {
                 <div>
                   <div className="flex items-center gap-3 mb-6 pb-5 border-b border-gray-100 dark:border-white/10">
                     <div className="p-2.5 bg-brand/10 rounded-xl text-brand"><FiBell size={20} /></div>
-                    <h2 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white tracking-tight">Notifications</h2>
+                    <h2 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white tracking-tight">{t('notifications')}</h2>
                   </div>
                   <div className="space-y-4 max-w-xl">
                     <label className="flex items-center justify-between p-4 bg-gray-50/50 dark:bg-[#1F2937]/50 rounded-2xl cursor-pointer transition-colors border border-transparent hover:border-gray-200 dark:hover:border-gray-700">
                       <div className="pr-4">
-                        <h4 className="font-semibold text-gray-900 dark:text-gray-100 text-sm">Email Alerts</h4>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Digital tickets & account updates directly to your inbox.</p>
+                        <h4 className="font-semibold text-gray-900 dark:text-gray-100 text-sm">{t('emailAlerts')}</h4>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{t('emailAlertsDesc')}</p>
                       </div>
                       <div className={`w-12 h-6 shrink-0 flex items-center rounded-full p-1 transition-colors duration-300 ${notifications.email ? 'bg-brand' : 'bg-gray-300 dark:bg-gray-600'}`} onClick={(e) => { e.preventDefault(); toggleNotif('email') }}>
                         <div className={`bg-white w-4 h-4 rounded-full shadow-sm transform transition-transform duration-300 ${notifications.email ? 'translate-x-6' : 'translate-x-0'}`}></div>
@@ -307,8 +307,8 @@ export default function Profile() {
 
                     <label className="flex items-center justify-between p-4 bg-gray-50/50 dark:bg-[#1F2937]/50 rounded-2xl cursor-pointer transition-colors border border-transparent hover:border-gray-200 dark:hover:border-gray-700">
                       <div className="pr-4">
-                        <h4 className="font-semibold text-gray-900 dark:text-gray-100 text-sm">App Push Notifications</h4>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Quick boarding reminders and urgent delay alerts on your device.</p>
+                        <h4 className="font-semibold text-gray-900 dark:text-gray-100 text-sm">{t('appPush')}</h4>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{t('appPushDesc')}</p>
                       </div>
                       <div className={`w-12 h-6 shrink-0 flex items-center rounded-full p-1 transition-colors duration-300 ${notifications.app ? 'bg-brand' : 'bg-gray-300 dark:bg-gray-600'}`} onClick={(e) => { e.preventDefault(); toggleNotif('app') }}>
                         <div className={`bg-white w-4 h-4 rounded-full shadow-sm transform transition-transform duration-300 ${notifications.app ? 'translate-x-6' : 'translate-x-0'}`}></div>
@@ -317,8 +317,8 @@ export default function Profile() {
 
                     <label className="flex items-center justify-between p-4 bg-gray-50/50 dark:bg-[#1F2937]/50 rounded-2xl cursor-pointer transition-colors border border-transparent hover:border-gray-200 dark:hover:border-gray-700">
                       <div className="pr-4">
-                        <h4 className="font-semibold text-gray-900 dark:text-gray-100 text-sm">SMS Messages</h4>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Receive text updates when offline or roaming.</p>
+                        <h4 className="font-semibold text-gray-900 dark:text-gray-100 text-sm">{t('smsMessages')}</h4>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{t('smsMessagesDesc')}</p>
                       </div>
                       <div className={`w-12 h-6 shrink-0 flex items-center rounded-full p-1 transition-colors duration-300 ${notifications.sms ? 'bg-brand' : 'bg-gray-300 dark:bg-gray-600'}`} onClick={(e) => { e.preventDefault(); toggleNotif('sms') }}>
                         <div className={`bg-white w-4 h-4 rounded-full shadow-sm transform transition-transform duration-300 ${notifications.sms ? 'translate-x-6' : 'translate-x-0'}`}></div>
@@ -330,7 +330,7 @@ export default function Profile() {
                 <div>
                   <div className="flex items-center gap-3 mb-6 pb-5 border-b border-gray-100 dark:border-white/10">
                     <div className="p-2.5 bg-brand/10 rounded-xl text-brand"><FiGlobe size={20} /></div>
-                    <h2 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white tracking-tight">Display Language</h2>
+                    <h2 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white tracking-tight">{t('displayLanguage')}</h2>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-2xl">
                     {[
@@ -342,7 +342,7 @@ export default function Profile() {
                       return (
                         <button
                           key={lang.code}
-                          onClick={() => i18n.changeLanguage(lang.code)}
+                          onClick={() => { i18n.changeLanguage(lang.code); localStorage.setItem('i18nextLng', lang.code); }}
                           className={`relative p-4 rounded-2xl transition-all duration-300 text-left border flex flex-col gap-3 overflow-hidden ${isActive
                             ? 'border-brand bg-brand/5 shadow-sm shadow-brand/10'
                             : 'border-gray-100 dark:border-[#1F2937] bg-white dark:bg-[#111827] hover:border-brand/30 hover:shadow-sm'

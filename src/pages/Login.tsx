@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useLogin, useVerifyLogin, useVerify2FA, useResendOtp } from "../hooks/useAuth";
 import { FiPhone, FiLock, FiLoader, FiEye, FiEyeOff, FiMail } from "react-icons/fi";
 
@@ -8,6 +9,7 @@ const flags: Record<string, string> = { "+250": "rw", "+254": "ke", "+256": "ug"
 const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useTranslation();
   
   const { mutate: login, isPending } = useLogin();
   const { mutate: verifyLogin, isPending: isVerifying } = useVerifyLogin();
@@ -75,7 +77,7 @@ const Login = () => {
     
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors);
-      setError("Please fill out all required fields.");
+      setError(t('please填AllFields', 'Please fill out all required fields.'));
       return;
     }
     setFieldErrors({});
@@ -136,15 +138,15 @@ const Login = () => {
         {step === 1 ? (
           <div className="animate-fade-in">
             <div className="text-center mb-10">
-              <h2 className="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight mb-2">Welcome Back</h2>
-              <p className="text-gray-500 dark:text-gray-400">Log in to manage your tickets.</p>
+              <h2 className="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight mb-2">{t('logInTitle')}</h2>
+              <p className="text-gray-500 dark:text-gray-400">{t('logInSubtitle')}</p>
             </div>
 
             {error && <div className="mb-4 bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 px-4 py-3 rounded-xl text-sm font-medium border border-red-100 dark:border-red-500/20">{error}</div>}
 
             <form onSubmit={handleSubmit} className="space-y-6 pt-2">
               <div className="group relative">
-                <label className={`block text-xs font-bold mb-2 transition-colors ${fieldErrors.identifier ? 'text-red-500' : 'text-gray-500 dark:text-gray-400 group-focus-within:text-brand'}`}>Phone or Email</label>
+                <label className={`block text-xs font-bold mb-2 transition-colors ${fieldErrors.identifier ? 'text-red-500' : 'text-gray-500 dark:text-gray-400 group-focus-within:text-brand'}`}>{t('signUpPhone')}</label>
                 <div className="relative flex">
                   <span className={`absolute left-4 top-1/2 -translate-y-1/2 transition-colors z-10 ${fieldErrors.identifier ? 'text-red-400' : 'text-gray-400 group-focus-within:text-brand'}`}>
                     {formData.identifier.includes('@') ? <FiMail size={18} /> : <FiPhone size={18} />}
@@ -184,8 +186,8 @@ const Login = () => {
 
               <div className="group relative">
                 <div className="flex justify-between items-center mb-2">
-                  <label className={`text-xs font-bold transition-colors ${fieldErrors.password ? 'text-red-500' : 'text-gray-500 dark:text-gray-400 group-focus-within:text-brand'}`}>Password</label>
-                  <Link to="/forgot-password" className="text-xs font-bold text-brand hover:text-brand/80 transition-colors">Forgot?</Link>
+                  <label className={`text-xs font-bold transition-colors ${fieldErrors.password ? 'text-red-500' : 'text-gray-500 dark:text-gray-400 group-focus-within:text-brand'}`}>{t('signUpPassword')}</label>
+                  <Link to="/forgot-password" className="text-xs font-bold text-brand hover:text-brand/80 transition-colors">{t('forgotPassword')}</Link>
                 </div>
                 <div className="relative">
                   <span className={`absolute left-4 top-1/2 -translate-y-1/2 transition-colors ${fieldErrors.password ? 'text-red-400' : 'text-gray-400 group-focus-within:text-brand'}`}><FiLock size={18} /></span>
@@ -209,21 +211,21 @@ const Login = () => {
                 className={`w-full bg-brand text-white py-4 rounded-xl font-bold shadow-md hover:shadow-lg hover:shadow-brand/30 transition-all mt-8 flex justify-center items-center gap-2 ${isPending ? 'opacity-80' : 'hover:-translate-y-0.5 active:scale-[0.98]'}`}
               >
                 {isPending && <FiLoader className="animate-spin" />}
-                {isPending ? "Authenticating..." : "Sign In"}
+                {isPending ? t('processing') : t('logInSubmit')}
               </button>
             </form>
 
             <p className="mt-8 text-center text-sm text-gray-500 dark:text-gray-400 font-medium">
-              Don't have an account? <Link to="/signup" className="text-brand hover:underline font-bold">Sign up now</Link>
+              {t('logInAlready')} <Link to="/signup" className="text-brand hover:underline font-bold">{t('signup')}</Link>
             </p>
           </div>
         ) : (
           <div className="animate-fade-in text-center">
             <h2 className="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight mb-2">
-              Security Check
+              {t('verifyPhone')}
             </h2>
             <p className="text-gray-500 dark:text-gray-400 mb-8">
-              We sent an OTP code to your phone.
+              {t('sendOtp')}
             </p>
 
             {error && (
@@ -248,20 +250,20 @@ const Login = () => {
                 className={`w-full bg-brand text-white py-4 rounded-xl font-bold shadow-md hover:shadow-lg transition-all flex justify-center items-center gap-2 ${isVerifying || isVerifying2FA ? "opacity-80" : "hover:-translate-y-0.5 active:scale-[0.98]"}`}
               >
                 {(isVerifying || isVerifying2FA) && <FiLoader className="animate-spin" />}
-                {(isVerifying || isVerifying2FA) ? "Verifying..." : "Confirm OTP"}
+                {(isVerifying || isVerifying2FA) ? t('processing') : t('confirmOtp')}
               </button>
             </form>
 
             <div className="text-center text-sm font-medium mt-6">
               {timer > 0 ? (
                 <p className="text-gray-500 dark:text-gray-400">
-                  Resend code in <span className="font-bold text-gray-900 dark:text-white">{timer}s</span>
+                  {t('resendIn', { seconds: timer })}
                 </p>
               ) : (
                 <p className="text-gray-500 dark:text-gray-400">
-                  Didn't receive the code?{" "}
+                  {t('signUpAlready')}{" "}
                   <button type="button" onClick={handleResend} disabled={isResending} className="text-brand font-bold hover:underline ml-1">
-                    {isResending ? "Sending..." : "Resend OTP"}
+                    {isResending ? t('processing') : t('resendOtp')}
                   </button>
                 </p>
               )}

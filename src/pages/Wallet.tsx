@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { BiSolidWallet } from 'react-icons/bi';
 import { FiLoader, FiArrowUp, FiArrowDown, FiAlertCircle } from 'react-icons/fi';
 import { AiOutlineClose } from 'react-icons/ai';
@@ -31,6 +32,7 @@ const StatusBadge = ({ status }: { status: WalletTransaction['status'] }) => {
 };
 
 const Wallet = () => {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const showToast = useToastStore((s) => s.showToast);
   const { data: user } = useUser();
@@ -167,7 +169,7 @@ const Wallet = () => {
             <div className="absolute top-[-20%] right-[-10%] w-48 h-48 bg-white/10 rounded-full blur-[30px] pointer-events-none" />
             <div className="flex items-end justify-between gap-4 relative z-10">
               <div>
-                <p className="text-white/80 font-semibold uppercase tracking-[0.15em] text-xs mb-1">Total Balance</p>
+                <p className="text-white/80 font-semibold uppercase tracking-[0.15em] text-xs mb-1">{t('totalBalance')}</p>
                 {isWalletLoading ? (
                   <div className="h-10 w-40 rounded-xl bg-white/20 animate-pulse mb-1" />
                 ) : (
@@ -183,7 +185,7 @@ const Wallet = () => {
                 onClick={() => setFlow('sheet')}
                 className="shrink-0 bg-white text-brand px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-gray-50 active:scale-95 transition-all shadow-md flex items-center gap-2"
               >
-                <BiSolidWallet size={16} /> Top Up
+                <BiSolidWallet size={16} /> {t('topUp')}
               </button>
             </div>
           </div>
@@ -192,7 +194,7 @@ const Wallet = () => {
         {/* ── Transaction history ── */}
         <div>
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-base font-bold text-gray-900 dark:text-white">Transactions</h3>
+            <h3 className="text-base font-bold text-gray-900 dark:text-white">{t('transactions')}</h3>
             <div className="flex gap-1">
               {(['all', 'topup', 'payment'] as TxFilter[]).map((f) => (
                 <button
@@ -200,7 +202,7 @@ const Wallet = () => {
                   onClick={() => { setTxFilter(f); setPage(1); }}
                   className={`text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors ${txFilter === f ? 'bg-brand text-white' : 'bg-gray-100 dark:bg-white/5 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-white/10'}`}
                 >
-                  {f === 'all' ? 'All' : f === 'topup' ? 'Top Ups' : 'Payments'}
+                  {f === 'all' ? t('allTransactions') : f === 'topup' ? t('topUps') : t('payments')}
                 </button>
               ))}
             </div>
@@ -213,8 +215,8 @@ const Wallet = () => {
           ) : !txData?.data?.length ? (
             <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
               <BiSolidWallet size={40} className="text-gray-300 dark:text-gray-600" />
-              <p className="text-gray-500 dark:text-gray-400 text-sm font-semibold">No transactions yet</p>
-              <p className="text-gray-400 dark:text-gray-600 text-xs">Top up your wallet to get started</p>
+              <p className="text-gray-500 dark:text-gray-400 text-sm font-semibold">{t('noTransactions')}</p>
+              <p className="text-gray-400 dark:text-gray-600 text-xs">{t('noTransactionsDesc')}</p>
             </div>
           ) : (
             <div className="space-y-2">
@@ -280,10 +282,10 @@ const Wallet = () => {
           <div className="relative bg-white dark:bg-[#111827] w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden">
             <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-gray-100 dark:border-white/5">
               <div>
-                <h2 className="text-lg font-bold text-gray-900 dark:text-white">Top Up Wallet</h2>
+                <h2 className="text-lg font-bold text-gray-900 dark:text-white">{t('topUpWallet')}</h2>
                 {displayBalance !== null && (
                   <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
-                    Balance: {displayBalance.toLocaleString()} {displayCurrency}
+                    {t('currentBalance')}: {displayBalance.toLocaleString()} {displayCurrency}
                   </p>
                 )}
               </div>
@@ -294,21 +296,21 @@ const Wallet = () => {
             <div className="px-6 py-5 space-y-4">
               <div>
                 <label className="text-xs font-bold text-gray-500 dark:text-gray-400 mb-1.5 block">
-                  Amount (RWF) <span className="text-red-500">*</span>
+                  {t('amount')} <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="number"
                   min={500}
                   value={amount}
                   onChange={(e) => { setAmount(e.target.value); setAmountError(''); }}
-                  placeholder="Minimum 500 RWF"
+                  placeholder={t('amountMin')}
                   className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-neutral-700 bg-gray-50/50 dark:bg-[#1F2937]/50 text-gray-900 dark:text-white text-sm outline-none focus:border-brand/50 focus:ring-2 focus:ring-brand/20 transition-all"
                 />
                 {amountError && <p className="text-xs text-red-500 mt-1">{amountError}</p>}
               </div>
 
               <div>
-                <label className="text-xs font-bold text-gray-500 dark:text-gray-400 mb-1.5 block">Payment method</label>
+                <label className="text-xs font-bold text-gray-500 dark:text-gray-400 mb-1.5 block">{t('paymentMethod')}</label>
                 <div className="flex gap-2">
                   <button
                     onClick={() => setProvider('mtn')}
@@ -329,7 +331,7 @@ const Wallet = () => {
 
               <div>
                 <label className="text-xs font-bold text-gray-500 dark:text-gray-400 mb-1.5 block">
-                  Phone number <span className="text-red-500">*</span>
+                  {t('phoneNumber')} <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="tel"
@@ -347,8 +349,8 @@ const Wallet = () => {
                 className="w-full bg-brand text-white py-3 rounded-xl font-bold text-sm hover:bg-brand/90 active:scale-95 transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {topUp.isPending
-                  ? <><FiLoader className="animate-spin" size={16} /> Processing…</>
-                  : <><BiSolidWallet size={16} /> Confirm Top Up</>
+                  ? <><FiLoader className="animate-spin" size={16} /> {t('processing')}</>
+                  : <><BiSolidWallet size={16} /> {t('confirmTopUp')}</>
                 }
               </button>
             </div>
@@ -360,13 +362,13 @@ const Wallet = () => {
       {flow === 'waiting' && (
         <div className="fixed inset-0 z-[200] bg-white dark:bg-[#0B1120] flex flex-col items-center justify-center px-6">
           <FiLoader className="animate-spin text-brand mb-8" size={56} />
-          <h2 className="text-xl font-bold mb-2 text-gray-900 dark:text-white">Waiting for payment</h2>
-          <p className="text-gray-500 dark:text-white/70 text-sm mb-6">Enter your MoMo PIN to confirm</p>
+          <h2 className="text-xl font-bold mb-2 text-gray-900 dark:text-white">{t('waitingPayment')}</h2>
+          <p className="text-gray-500 dark:text-white/70 text-sm mb-6">{t('enterPin')}</p>
           <div className="bg-gray-100 dark:bg-white/10 rounded-2xl px-6 py-3 mb-6">
             <p className="text-base font-mono font-semibold tracking-widest text-gray-800 dark:text-white">{maskPhone(phone)}</p>
           </div>
           <div aria-live="polite" className="text-4xl font-extrabold tabular-nums text-gray-900 dark:text-white">{mins}:{secs}</div>
-          <p className="text-gray-400 dark:text-white/50 text-xs mt-2">Time remaining</p>
+          <p className="text-gray-400 dark:text-white/50 text-xs mt-2">{t('timeRemaining')}</p>
         </div>
       )}
 
@@ -378,14 +380,14 @@ const Wallet = () => {
             <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center mx-auto">
               <FiAlertCircle size={24} className="text-red-500" />
             </div>
-            <p className="font-bold text-gray-900 dark:text-white">Top-up failed</p>
+            <p className="font-bold text-gray-900 dark:text-white">{t('topUpFailed')}</p>
             <p className="text-sm text-gray-500 dark:text-gray-400">{sseError.message}</p>
             {sseError.retryable ? (
               <button
                 onClick={() => { setSseError(null); setFlow('sheet'); }}
                 className="w-full bg-brand text-white py-2.5 rounded-xl font-bold text-sm hover:bg-brand/90 active:scale-95 transition-all"
               >
-                Try again
+                {t('tryAgain')}
               </button>
             ) : (
               <p className="text-xs text-gray-400">Please try a different payment method.</p>
@@ -394,7 +396,7 @@ const Wallet = () => {
               onClick={() => { setSseError(null); setFlow('idle'); }}
               className="w-full text-sm text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors py-1"
             >
-              Dismiss
+              {t('dismiss')}
             </button>
           </div>
         </div>

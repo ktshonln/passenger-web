@@ -67,9 +67,9 @@ const MainLayout = () => {
 
                 {showLanguageMenu && (
                   <div className="absolute right-0 top-12 w-40 bg-white dark:bg-[#1F2937] border border-gray-100 dark:border-white/10 rounded-2xl shadow-xl shadow-gray-200/50 dark:shadow-black/50 py-2 z-50 animate-fade-in text-gray-900">
-                    <button onClick={() => { i18n.changeLanguage("en"); setShowLanguageMenu(false); }} className="w-full text-left px-5 py-2.5 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-brand/5 dark:hover:bg-brand/10 hover:text-brand transition-colors">English</button>
-                    <button onClick={() => { i18n.changeLanguage("fr"); setShowLanguageMenu(false); }} className="w-full text-left px-5 py-2.5 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-brand/5 dark:hover:bg-brand/10 hover:text-brand transition-colors">Français</button>
-                    <button onClick={() => { i18n.changeLanguage("kiny"); setShowLanguageMenu(false); }} className="w-full text-left px-5 py-2.5 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-brand/5 dark:hover:bg-brand/10 hover:text-brand transition-colors">Kinyarwanda</button>
+                    <button onClick={() => { i18n.changeLanguage("en"); localStorage.setItem('i18nextLng', 'en'); setShowLanguageMenu(false); }} className="w-full text-left px-5 py-2.5 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-brand/5 dark:hover:bg-brand/10 hover:text-brand transition-colors">English</button>
+                    <button onClick={() => { i18n.changeLanguage("fr"); localStorage.setItem('i18nextLng', 'fr'); setShowLanguageMenu(false); }} className="w-full text-left px-5 py-2.5 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-brand/5 dark:hover:bg-brand/10 hover:text-brand transition-colors">Français</button>
+                    <button onClick={() => { i18n.changeLanguage("kiny"); localStorage.setItem('i18nextLng', 'kiny'); setShowLanguageMenu(false); }} className="w-full text-left px-5 py-2.5 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-brand/5 dark:hover:bg-brand/10 hover:text-brand transition-colors">Kinyarwanda</button>
                   </div>
                 )}
               </div>
@@ -110,14 +110,14 @@ const MainLayout = () => {
                       onClick={() => setShowProfileMenu(false)}
                       className="flex items-center gap-3 px-5 py-2.5 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-brand/5 dark:hover:bg-brand/10 hover:text-brand transition-colors"
                     >
-                      <FiUser size={16} /> Profile
+                      <FiUser size={16} /> {t('profile')}
                     </Link>
                     <Link
                       to="/wallet"
                       onClick={() => setShowProfileMenu(false)}
                       className="flex items-center gap-3 px-5 py-2.5 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-brand/5 dark:hover:bg-brand/10 hover:text-brand transition-colors"
                     >
-                      <BiSolidWallet size={16} /> Wallet
+                      <BiSolidWallet size={16} /> {t('wallet')}
                     </Link>
                     <button
                       onClick={() => {
@@ -126,7 +126,7 @@ const MainLayout = () => {
                       }}
                       className="w-full flex justify-start items-center gap-3 px-5 py-2.5 text-sm font-semibold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors mt-1"
                     >
-                      <FiLogOut size={16} /> Sign Out
+                      <FiLogOut size={16} /> {t('logout')}
                     </button>
                   </div>
                 </div>
@@ -156,13 +156,13 @@ const MainLayout = () => {
           {isHome && <div className="w-full border-t border-white/20 mb-10" />}
           <div className="flex flex-wrap justify-center items-center gap-4 sm:gap-8 mb-2">
             <Link to="/privacy" className={`font-medium text-sm transition-colors ${isHome ? 'text-white/80 hover:text-white' : 'text-gray-500 dark:text-gray-400 hover:text-brand'}`}>
-              Privacy Policy
+              {t('privacy', 'Privacy Policy')}
             </Link>
             <Link to="/cookies" className={`font-medium text-sm transition-colors ${isHome ? 'text-white/80 hover:text-white' : 'text-gray-500 dark:text-gray-400 hover:text-brand'}`}>
-              Cookie Policy
+              {t('cookies', 'Cookie Policy')}
             </Link>
             <a href="mailto:clmntmugisha@gmail.com" className={`font-medium text-sm transition-colors ${isHome ? 'text-white/80 hover:text-white' : 'text-gray-500 dark:text-gray-400 hover:text-brand'}`}>
-              Contact Us
+              {t('contact', 'Contact Us')}
             </a>
           </div>
           <p className={`text-sm text-center ${isHome ? 'text-[#88C9FF]' : 'text-gray-400 dark:text-gray-600'}`}>

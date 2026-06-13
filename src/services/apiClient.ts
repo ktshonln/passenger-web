@@ -1,10 +1,25 @@
 import axios from "axios";
+import i18n from "../i18n";
 
-export const baseUrl = import.meta.env.VITE_API_URL || '/api/v1'; // Dynamically use import.meta.env.VITE_API_URL || '/api/v1'. By falling back to /api/v1 locally, we are now making "same-origin" requests that completely bypass all CORS restrictions. 
+export const baseUrl = import.meta.env.VITE_API_URL || '/api/v1';
 
 export const axiosInstance = axios.create({
     baseURL: baseUrl,
     withCredentials: true,
+});
+
+// Dynamically attach X-Locale header based on current i18n language.
+// Maps i18next language codes → API locale values (rw | en | fr).
+const localeMap: Record<string, string> = {
+  kiny: 'rw',
+  en: 'en',
+  fr: 'fr',
+};
+
+axiosInstance.interceptors.request.use((config) => {
+  const lang = i18n.language ?? 'kiny';
+  config.headers['X-Locale'] = localeMap[lang] ?? 'rw';
+  return config;
 });
 
 axiosInstance.interceptors.response.use(

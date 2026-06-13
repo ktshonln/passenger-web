@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useRegister, useVerifyPhone, useResendOtp } from "../hooks/useAuth";
 import { FiUser, FiMail, FiPhone, FiLock, FiLoader, FiEye, FiEyeOff } from "react-icons/fi";
 
@@ -7,6 +8,7 @@ const flags: Record<string, string> = { "+250": "rw", "+254": "ke", "+256": "ug"
 
 const Signup = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { mutate: register, isPending: isRegistering } = useRegister();
   const { mutate: verifyOtp, isPending: isVerifying } = useVerifyPhone();
   const { mutate: resendOtp, isPending: isResending } = useResendOtp();
@@ -133,7 +135,7 @@ const Signup = () => {
           <>
             <div className="text-center mb-10 animate-fade-in">
               <h2 className="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight mb-2">
-                Create Account
+                {t('signUpTitle')}
               </h2>
               <p className="text-gray-500 dark:text-gray-400">
                 Join Katisha to easily manage your tickets.
@@ -156,7 +158,7 @@ const Signup = () => {
                   <label
                     className={`block text-xs font-bold mb-2 transition-colors ${fieldErrors.first_name ? "text-red-500" : "text-gray-500 dark:text-gray-400 group-focus-within:text-brand"}`}
                   >
-                    First Name
+                    {t('signUpFirstName')}
                   </label>
                   <div className="relative">
                     <span
@@ -189,7 +191,7 @@ const Signup = () => {
                   <label
                     className={`block text-xs font-bold mb-2 transition-colors ${fieldErrors.last_name ? "text-red-500" : "text-gray-500 dark:text-gray-400 group-focus-within:text-brand"}`}
                   >
-                    Last Name
+                    {t('signUpLastName')}
                   </label>
                   <div className="relative">
                     <span
@@ -221,7 +223,7 @@ const Signup = () => {
                 <label
                   className={`block text-xs font-bold mb-2 transition-colors ${fieldErrors.phone_number ? "text-red-500" : "text-gray-500 dark:text-gray-400 group-focus-within:text-brand"}`}
                 >
-                  Phone Number
+                  {t('signUpPhone')}
                 </label>
                 <div className="relative flex">
                   <span
@@ -267,7 +269,7 @@ const Signup = () => {
               {/* Email Content */}
               <div className="group relative">
                 <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-2 transition-colors group-focus-within:text-brand">
-                  Email{" "}
+                  {t('signUpEmail')}{" "}
                   <span className="text-gray-400 font-normal">(Optional)</span>
                 </label>
                 <div className="relative">
@@ -291,7 +293,7 @@ const Signup = () => {
                 <label
                   className={`block text-xs font-bold mb-2 transition-colors ${fieldErrors.password ? "text-red-500" : "text-gray-500 dark:text-gray-400 group-focus-within:text-brand"}`}
                 >
-                  Password
+                  {t('signUpPassword')}
                 </label>
                 <div className="relative">
                   <span
@@ -326,23 +328,23 @@ const Signup = () => {
                 className={`w-full bg-brand text-white py-4 rounded-xl font-bold shadow-md hover:shadow-lg transition-all mt-8 flex justify-center items-center gap-2 ${isRegistering ? "opacity-80" : "hover:-translate-y-0.5 active:scale-[0.98]"}`}
               >
                 {isRegistering && <FiLoader className="animate-spin" />}
-                {isRegistering ? "Processing..." : "Create Account"}
+                {isRegistering ? t('processing') : t('signUpSubmit')}
               </button>
             </form>
             <p className="mt-8 text-center text-sm text-gray-500 dark:text-gray-400 font-medium">
-              Already have an account?{" "}
+              {t('signUpAlready')}{" "}
               <Link
                 to="/login"
                 className="text-brand hover:underline font-bold"
               >
-                Log in here
+                {t('login')}
               </Link>
             </p>
           </>
         ) : (
           <div className="animate-fade-in text-center">
             <h2 className="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight mb-2">
-              Verify Phone
+              {t('verifyPhone')}
             </h2>
             <p className="text-gray-500 dark:text-gray-400 mb-8">
               We sent an SMS OTP code to <br className="hidden sm:block" />
@@ -378,28 +380,25 @@ const Signup = () => {
                 {isVerifying && (
                   <FiLoader className="animate-spin text-gray-900 dark:text-brand" />
                 )}
-                {isVerifying ? "Verifying..." : "Confirm OTP"}
+                {isVerifying ? "Verifying..." : t('confirmOtp')}
               </button>
             </form>
 
             <div className="text-center text-sm font-medium mt-6">
               {timer > 0 ? (
                 <p className="text-gray-500 dark:text-gray-400">
-                  Resend code in{" "}
-                  <span className="font-bold text-gray-900 dark:text-white">
-                    {timer}s
-                  </span>
+                  {t('resendIn', { seconds: timer })}
                 </p>
               ) : (
                 <p className="text-gray-500 dark:text-gray-400">
-                  Didn't receive the code?{" "}
+                  {t('logInAlready')}{" "}
                   <button
                     type="button"
                     onClick={handleResend}
                     disabled={isResending}
                     className="text-brand font-bold hover:underline ml-1"
                   >
-                    {isResending ? "Sending..." : "Resend OTP"}
+                    {isResending ? t('processing') : t('resendOtp')}
                   </button>
                 </p>
               )}

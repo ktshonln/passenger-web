@@ -84,8 +84,8 @@ const TopUp = ({ onClose, onTopUpSuccess }: Props) => {
     setAmountError("");
     setPhoneError("");
     const amt = parseFloat(amount);
-    if (!amount || isNaN(amt) || amt < 500) {
-      setAmountError("Minimum top up amount is RWF 500");
+    if (!amount || isNaN(amt) || amt < 100) {
+      setAmountError("Minimum top up amount is RWF 100");
       return;
     }
     if (!phone.trim()) {
@@ -128,7 +128,7 @@ const TopUp = ({ onClose, onTopUpSuccess }: Props) => {
         },
         onError: (err: any) => {
           const code = err?.response?.data?.error?.code;
-          if (code === "INVALID_AMOUNT") setAmountError("Minimum top up amount is RWF 500");
+          if (code === "INVALID_AMOUNT") setAmountError("Minimum top up amount is RWF 100");
           else if (code === "INVALID_PHONE" || code === "VALIDATION_ERROR") setPhoneError("Please enter a valid phone number");
         },
       }
@@ -182,7 +182,7 @@ const TopUp = ({ onClose, onTopUpSuccess }: Props) => {
                 </label>
                 <input
                   type="number"
-                  min={500}
+                  min={100}
                   value={amount}
                   onChange={(e) => { setAmount(e.target.value); setAmountError(""); }}
                   placeholder={t('amountMin')}

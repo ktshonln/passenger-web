@@ -107,7 +107,7 @@ const Wallet = () => {
     setAmountError('');
     setPhoneError('');
     const amt = parseFloat(amount);
-    if (!amount || isNaN(amt) || amt < 500) { setAmountError('Minimum top up amount is RWF 500'); return; }
+    if (!amount || isNaN(amt) || amt < 100) { setAmountError('Minimum top up amount is RWF 100'); return; }
     if (!phone.trim()) { setPhoneError('Please enter a valid phone number'); return; }
 
     topUp.mutate(
@@ -145,7 +145,7 @@ const Wallet = () => {
         },
         onError: (err: any) => {
           const code = err?.response?.data?.error?.code;
-          if (code === 'INVALID_AMOUNT') setAmountError('Minimum top up amount is RWF 500');
+          if (code === 'INVALID_AMOUNT') setAmountError('Minimum top up amount is RWF 100');
           else if (code === 'INVALID_PHONE' || code === 'VALIDATION_ERROR') setPhoneError('Please enter a valid phone number');
         },
       }

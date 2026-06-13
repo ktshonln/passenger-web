@@ -5,7 +5,7 @@ import type { TopUpInitiated, TopUpPayload } from "../types";
 
 // Maps known server error codes to friendly messages
 const topUpErrorMessages: Record<string, string> = {
-  INVALID_AMOUNT: "Minimum top up amount is RWF 500",
+  INVALID_AMOUNT: "Minimum top up amount is RWF 100",
   INVALID_PHONE: "Please enter a valid phone number",
   VALIDATION_ERROR: "Please check your phone number and amount",
   PHONE_NOT_FOUND: "No phone number on your account. Please enter one manually",

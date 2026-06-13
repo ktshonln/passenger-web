@@ -33,13 +33,15 @@ axiosInstance.interceptors.response.use(
             const isAuthReq = url.includes('/auth/');
 
             // Catch explicit 401 Unauthorized token expiries and attempt to auto-refresh silently.
-            // Only exclude the refresh endpoint itself (would cause infinite loop) and
-            // auth login endpoint (user deliberately sent wrong credentials).
-            // /users/me IS included so an expired token on page load triggers a refresh
-            // rather than immediately kicking the user out.
+            // Exclude:
+            //   - /auth/refresh itself (infinite loop)
+            //   - /auth/login (deliberate wrong credentials)
+            //   - /users/me (optional auth probe — 401 just means not logged in, not a redirect trigger)
+            //   - wallet SSE endpoints (401 = not authenticated, not expired token)
             const isAuthProbe =
-                url.includes('/wallet/topup') || // topup SSE stream — 401 = not logged in, don't loop
-                url.includes('/wallet/transactions'); // same
+                url.includes('/users/me') ||        // header user check — 401 = guest, not expired token
+                url.includes('/wallet/topup') ||    // SSE — 401 = not logged in
+                url.includes('/wallet/transactions'); // paginated — 401 = not logged in
 
             if (
                 status === 401 &&
@@ -54,8 +56,11 @@ axiosInstance.interceptors.response.use(
                     // Cookie tokens securely rotated — resume the paused request:
                     return axiosInstance(originalRequest);
                 } catch (err) {
-                    // Refresh failed (token revoked or hard-expired) — go to login
-                    if (window.location.pathname !== '/login' && window.location.pathname !== '/signup') {
+                    // Refresh failed (token revoked or hard-expired) — only redirect if
+                    // we were actually on a protected page, not a public one
+                    const publicPaths = ['/', '/login', '/signup', '/trips', '/forgot-password', '/reset-password', '/privacy', '/cookies'];
+                    const isPublicPath = publicPaths.some(p => window.location.pathname === p || window.location.pathname.startsWith('/trips/'));
+                    if (!isPublicPath && window.location.pathname !== '/login' && window.location.pathname !== '/signup') {
                         window.location.href = '/login';
                     }
                     return Promise.reject(err);

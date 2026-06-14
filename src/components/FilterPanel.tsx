@@ -61,7 +61,7 @@ const FilterPanel = ({ onFilterChange, initialQ }: FilterPanelProps) => {
 
   // ── Emit helpers ──────────────────────────────────────────────────────────
   const emit = (overrides: Partial<TripFilters> & {
-    q?: string; origin_id?: string | null; company_id?: string | null; date?: string;
+    q?: string; origin_id?: string | undefined; company_id?: string | undefined; date?: string;
   }) => {
     onFilterChange({
       q: ('q' in overrides ? overrides.q : searchQuery) || undefined,
@@ -182,7 +182,7 @@ const FilterPanel = ({ onFilterChange, initialQ }: FilterPanelProps) => {
                       e.preventDefault();
                       setSelectedCompany(null);
                       setShowCompanyDropdown(false);
-                      emit({ company_id: null });
+                      emit({ company_id: undefined });
                     }}
                   >
                     All operators

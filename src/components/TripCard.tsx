@@ -1,5 +1,6 @@
 import { FiArrowRight } from 'react-icons/fi';
 import { MdAirlineSeatReclineNormal } from 'react-icons/md';
+import { RiFlashlightLine } from 'react-icons/ri';
 import type { Trip } from '../types';
 import { getCdnUrl } from '../utils/media';
 
@@ -29,7 +30,14 @@ const TripCard = ({ trip, onClick }: TripCardProps) => {
           <div className="w-10 h-10 rounded-full bg-brand/10 text-brand flex items-center justify-center text-sm font-bold shrink-0">{initials}</div>
         )}
         <div className="flex-1 min-w-0">
-          <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1 truncate">{trip.company?.name}</p>
+          <div className="flex items-center gap-1.5 mb-1">
+            <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 truncate">{trip.company?.name}</p>
+            {trip.is_express && (
+              <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 text-[10px] font-bold shrink-0">
+                <RiFlashlightLine size={10} />Express
+              </span>
+            )}
+          </div>
           <div className="flex items-center gap-1.5 text-sm font-bold text-gray-900 dark:text-white">
             <span className="truncate">{trip.origin?.name}</span>
             <FiArrowRight size={14} className="text-brand shrink-0" />

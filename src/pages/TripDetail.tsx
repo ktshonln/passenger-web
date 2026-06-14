@@ -63,9 +63,9 @@ const TripDetail = () => {
     : [];
 
   useEffect(() => {
-    if (trip && !boardingStopId && stops.length > 0) {
-      setBoardingStopId(stops[0].id);
-      setAlightingStopId(stops[stops.length - 1].id);
+    if (trip && !boardingStopId) {
+      setBoardingStopId(trip.origin.id);
+      setAlightingStopId(trip.destination.id);
     }
   }, [trip]);
 
@@ -296,6 +296,9 @@ const TripDetail = () => {
               <div>
                 <span className="text-2xl font-bold text-gray-900 dark:text-white">{totalPrice.toLocaleString()} {price.currency}</span>
                 {seatsCount > 1 && <span className="text-xs text-gray-400 ml-2">({price.amount.toLocaleString()} × {seatsCount})</span>}
+                <p className={`text-xs font-semibold mt-1 ${trip.available_seats === 0 ? 'text-red-500 dark:text-red-400' : trip.available_seats <= 5 ? 'text-amber-500 dark:text-amber-400' : 'text-green-600 dark:text-green-400'}`}>
+                  {trip.available_seats === 0 ? t('noSeats') : `${trip.available_seats} ${t('availableSeats')}`}
+                </p>
               </div>
             ) : null}
           </div>

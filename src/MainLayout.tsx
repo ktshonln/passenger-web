@@ -66,7 +66,7 @@ const MainLayout = () => {
                 </button>
 
                 {showLanguageMenu && (
-                  <div className="absolute right-0 top-12 w-40 bg-white dark:bg-[#1F2937] border border-gray-100 dark:border-white/10 rounded-2xl shadow-xl shadow-gray-200/50 dark:shadow-black/50 py-2 z-50 animate-fade-in text-gray-900">
+                  <div className="absolute right-0 sm:right-0 top-12 w-40 max-w-[calc(100vw-2rem)] -translate-x-[max(0px,calc(100%-100vw+1rem))] bg-white dark:bg-[#1F2937] border border-gray-100 dark:border-white/10 rounded-2xl shadow-xl shadow-gray-200/50 dark:shadow-black/50 py-2 z-50 animate-fade-in text-gray-900">
                     <button onClick={() => { i18n.changeLanguage("en"); localStorage.setItem('i18nextLng', 'en'); setShowLanguageMenu(false); }} className="w-full text-left px-5 py-2.5 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-brand/5 dark:hover:bg-brand/10 hover:text-brand transition-colors">English</button>
                     <button onClick={() => { i18n.changeLanguage("fr"); localStorage.setItem('i18nextLng', 'fr'); setShowLanguageMenu(false); }} className="w-full text-left px-5 py-2.5 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-brand/5 dark:hover:bg-brand/10 hover:text-brand transition-colors">Français</button>
                     <button onClick={() => { i18n.changeLanguage("kiny"); localStorage.setItem('i18nextLng', 'kiny'); setShowLanguageMenu(false); }} className="w-full text-left px-5 py-2.5 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-brand/5 dark:hover:bg-brand/10 hover:text-brand transition-colors">Kinyarwanda</button>

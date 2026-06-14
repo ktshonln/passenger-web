@@ -39,7 +39,6 @@ axiosInstance.interceptors.response.use(
             //   - /users/me (optional auth probe — 401 just means not logged in, not a redirect trigger)
             //   - wallet SSE endpoints (401 = not authenticated, not expired token)
             const isAuthProbe =
-                url.includes('/users/me') ||        // header user check — 401 = guest, not expired token
                 url.includes('/wallet/topup') ||    // SSE — 401 = not logged in
                 url.includes('/wallet/transactions'); // paginated — 401 = not logged in
 
@@ -56,11 +55,12 @@ axiosInstance.interceptors.response.use(
                     // Cookie tokens securely rotated — resume the paused request:
                     return axiosInstance(originalRequest);
                 } catch (err) {
-                    // Refresh failed (token revoked or hard-expired) — only redirect if
-                    // we were actually on a protected page, not a public one
+                    // Refresh failed — only redirect if on a protected page
+                    // /users/me is used as an auth probe — failure just means guest, not a redirect
+                    const isUserProbe = url.includes('/users/me');
                     const publicPaths = ['/', '/login', '/signup', '/trips', '/forgot-password', '/reset-password', '/privacy', '/cookies'];
                     const isPublicPath = publicPaths.some(p => window.location.pathname === p || window.location.pathname.startsWith('/trips/'));
-                    if (!isPublicPath && window.location.pathname !== '/login' && window.location.pathname !== '/signup') {
+                    if (!isUserProbe && !isPublicPath && window.location.pathname !== '/login' && window.location.pathname !== '/signup') {
                         window.location.href = '/login';
                     }
                     return Promise.reject(err);

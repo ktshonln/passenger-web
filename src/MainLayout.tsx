@@ -35,7 +35,7 @@ const MainLayout = () => {
   }, []);
 
   return (
-    <div className={`overflow-x-clip min-h-screen flex flex-col font-inter transition-colors duration-300 ${isHome ? 'bg-gradient-to-br from-brand to-[#1E99FF] text-white' : 'bg-[#F8FAFC] dark:bg-[#0B1120] text-gray-900 dark:text-gray-100'}`}>
+    <div className={`overflow-x-hidden min-h-screen flex flex-col font-inter transition-colors duration-300 ${isHome ? 'bg-gradient-to-br from-brand to-[#1E99FF] text-white' : 'bg-[#F8FAFC] dark:bg-[#0B1120] text-gray-900 dark:text-gray-100'}`}>
       <header className={`sticky top-0 z-50 transition-all duration-300 border-b ${isHome ? 'bg-white/0 text-white border-white/0 shadow-none backdrop-blur-none' : 'bg-white/80 dark:bg-[#111827]/80 backdrop-blur-xl border-gray-100 dark:border-white/5 shadow-sm'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-wrap justify-between items-center min-h-[6rem] py-4 gap-y-4">

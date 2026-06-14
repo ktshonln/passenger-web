@@ -4,10 +4,10 @@ import { CACHE_KEY_LOCATIONS } from "../utils/constants";
 import type { Location } from "../types";
 
 const useLocations = (q?: string) =>
-  useQuery<{ locations: Location[] }, Error, Location[]>({
+  useQuery<{ data: Location[]; total: number; page: number; limit: number }, Error, Location[]>({
     queryKey: [...CACHE_KEY_LOCATIONS, q ?? ""],
     queryFn: () => locationService.getLocations(q),
-    select: (res) => res.locations,
+    select: (res) => res.data,
     staleTime: 5 * 60 * 1000,
     placeholderData: (prev) => prev,
   });

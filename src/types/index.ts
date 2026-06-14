@@ -6,6 +6,7 @@ export interface Location {
   lat: number;
   lng: number;
   city?: string | null;
+  province?: string | null;
 }
 
 export interface Organization {

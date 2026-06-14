@@ -7,7 +7,7 @@ const TRIPS: any[] = [
     origin: { id: "loc-kgl", name: "Kigali", lat: -1.9441, lng: 30.0619 },
     destination: { id: "loc-mus", name: "Musanze", lat: -1.4990, lng: 29.6340 },
     departure_at: "2026-06-01T07:00:00Z", arrival_at: "2026-06-01T09:30:00Z",
-    currency: "RWF", available_seats: 14, total_seats: 30,
+    currency: "RWF", available_seats: 14, total_seats: 30, price: 2500,
     company: { id: "org-volcano", name: "Volcano Express", logo_path: null, story: "Connecting Rwanda since 2005 with safe, reliable intercity bus services." },
     bus: { id: "bus-001", plate: "RAA 001 A", type: "Coach" },
     stops: [
@@ -21,7 +21,7 @@ const TRIPS: any[] = [
     origin: { id: "loc-kgl", name: "Kigali", lat: -1.9441, lng: 30.0619 },
     destination: { id: "loc-huy", name: "Huye", lat: -2.5960, lng: 29.7390 },
     departure_at: "2026-06-01T09:00:00Z", arrival_at: "2026-06-01T12:00:00Z",
-    currency: "RWF", available_seats: 20, total_seats: 45,
+    currency: "RWF", available_seats: 20, total_seats: 45, price: 3000,
     company: { id: "org-ritco", name: "RITCO", logo_path: null, story: "Rwanda Integrated Transport Company — serving the nation." },
     bus: { id: "bus-003", plate: "RAB 010 C", type: "Minibus" },
     stops: [
@@ -34,7 +34,7 @@ const TRIPS: any[] = [
     origin: { id: "loc-kgl", name: "Kigali", lat: -1.9441, lng: 30.0619 },
     destination: { id: "loc-rub", name: "Rubavu", lat: -1.6800, lng: 29.3600 },
     departure_at: "2026-06-01T08:00:00Z", arrival_at: "2026-06-01T11:00:00Z",
-    currency: "RWF", available_seats: 0, total_seats: 30,
+    currency: "RWF", available_seats: 0, total_seats: 30, price: 3500,
     company: { id: "org-volcano", name: "Volcano Express", logo_path: null, story: "Connecting Rwanda since 2005." },
     bus: { id: "bus-002", plate: "RAA 002 B", type: "Coach" },
     stops: [
@@ -68,13 +68,29 @@ export const tripHandlers = [
   http.get(`${baseUrl}/trips`, async ({ request }) => {
     await delay(400);
     const url = new URL(request.url);
-    const boarding = url.searchParams.get("boarding_stop_id");
-    const alighting = url.searchParams.get("alighting_stop_id");
+    const q = url.searchParams.get("q")?.toLowerCase();
+    const origin_id = url.searchParams.get("origin_id");
+    const company_id = url.searchParams.get("company_id");
+    const date = url.searchParams.get("date");
+
     let results = [...TRIPS];
-    if (boarding) results = results.filter((t) => t.stops?.some((s: any) => s.id === boarding));
-    if (alighting) results = results.filter((t) => t.stops?.some((s: any) => s.id === alighting));
+
+    // Free-text: match against origin or destination name
+    if (q) {
+      results = results.filter(
+        (t) =>
+          t.origin.name.toLowerCase().includes(q) ||
+          t.destination.name.toLowerCase().includes(q)
+      );
+    }
+    if (origin_id) results = results.filter((t) => t.origin.id === origin_id);
+    if (company_id) results = results.filter((t) => t.company.id === company_id);
+    if (date) {
+      results = results.filter((t) => t.departure_at.startsWith(date));
+    }
+
     results.sort((a, b) => new Date(a.departure_at).getTime() - new Date(b.departure_at).getTime());
-    return HttpResponse.json({ trips: results, total: results.length, page: 1, limit: 20 });
+    return HttpResponse.json({ data: results, total: results.length, page: 1, limit: 20 });
   }),
 
   http.get(`${baseUrl}/prices`, async ({ request }) => {

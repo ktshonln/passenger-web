@@ -50,6 +50,7 @@ export interface Trip {
   destination: Location;
   departure_at: string;
   arrival_at?: string;
+  price?: number | null;
   currency: string;
   available_seats: number;
   total_seats: number;
@@ -186,10 +187,10 @@ export interface PaginatedResponse<T> {
 // ─── Service param types ──────────────────────────────────────────────────────
 
 export interface GetTripsParams {
-  boarding_stop_id?: string;
-  alighting_stop_id?: string;
+  q?: string;
+  origin_id?: string;
+  company_id?: string;
   date?: string;
-  seats?: number;
   page?: number;
   limit?: number;
 }
@@ -234,7 +235,7 @@ export interface AuthResponse {
 // ─── Trip list pagination ─────────────────────────────────────────────────────
 
 export interface PaginatedTrips {
-  trips: Trip[];
+  data: Trip[];
   total: number;
   page: number;
   limit: number;

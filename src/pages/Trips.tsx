@@ -1,58 +1,69 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { MdOutlineDirectionsBus } from 'react-icons/md';
 import { useTrips } from '../hooks/useTrips';
 import TripCard from '../components/TripCard';
 import TripCardSkeleton from '../components/TripCardSkeleton';
-import FilterPanel from '../components/FilterPanel';
-import type { GetTripsParams } from '../types';
+import FilterPanel, { type TripFilters } from '../components/FilterPanel';
 
 const Trips = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
-  const [filters, setFilters] = useState<{
-    boarding_stop_id?: string;
-    alighting_stop_id?: string;
-    date?: string;
-  }>({});
+  // Seed the initial query from the URL (?q=Musanze from Home page)
+  const initialQ = searchParams.get('q') ?? undefined;
 
-  // Only fire the query when at least boarding + alighting stop are selected.
-  // Without them the real backend returns 500 (staff-mode requires auth headers).
-  const hasRequiredFilters =
-    Boolean(filters.boarding_stop_id) && Boolean(filters.alighting_stop_id);
+  const [filters, setFilters] = useState<TripFilters>({
+    q: initialQ,
+  });
 
-  const params: GetTripsParams = { ...filters };
+  // Re-sync if the URL changes (e.g. browser back/forward)
+  useEffect(() => {
+    const q = searchParams.get('q') ?? undefined;
+    setFilters((prev) => ({ ...prev, q }));
+  }, [searchParams]);
+
+  // Fire the query whenever any filter is set
+  const hasAnyFilter =
+    Boolean(filters.q) ||
+    Boolean(filters.origin_id) ||
+    Boolean(filters.company_id) ||
+    Boolean(filters.date);
 
   const { data, isLoading, isError, refetch } = useTrips(
-    hasRequiredFilters ? params : undefined
+    hasAnyFilter ? filters : undefined
   );
 
-  const trips = data?.trips ?? [];
+  const trips = data?.data ?? [];
 
   return (
     <div className="bg-[#F8FAFC] dark:bg-[#0B1120] min-h-full">
       <div className="max-w-5xl mx-auto px-4 pt-6 pb-20">
 
         {/* Filter panel — always visible at top */}
-        <FilterPanel onFilterChange={setFilters} />
+        <FilterPanel
+          initialQ={initialQ}
+          onFilterChange={setFilters}
+        />
 
         {/* Results */}
         <div className="grid grid-cols-1 gap-3 mt-4">
-          {/* Prompt state — no filters selected yet */}
-          {!hasRequiredFilters && (
+
+          {/* Prompt state — nothing entered yet */}
+          {!hasAnyFilter && (
             <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
               <MdOutlineDirectionsBus size={48} className="text-gray-300 dark:text-gray-600" />
               <p className="text-gray-600 dark:text-gray-400 font-semibold text-sm">
-                Select a boarding and alighting stop to search for trips
+                Where would you like to go?
               </p>
               <p className="text-gray-400 dark:text-gray-600 text-xs max-w-xs">
-                Use the filters above to choose your departure and arrival stops, then optionally pick a date.
+                Type a destination, choose an origin stop, or pick a date to find trips.
               </p>
             </div>
           )}
 
           {/* Loading skeletons */}
-          {hasRequiredFilters && isLoading && (
+          {hasAnyFilter && isLoading && (
             <>
               <TripCardSkeleton />
               <TripCardSkeleton />
@@ -62,7 +73,7 @@ const Trips = () => {
           )}
 
           {/* Error state */}
-          {hasRequiredFilters && isError && (
+          {hasAnyFilter && isError && (
             <div className="flex flex-col items-center justify-center py-16 gap-4">
               <p className="text-gray-500 dark:text-gray-400 text-sm">Failed to load trips.</p>
               <button
@@ -75,28 +86,26 @@ const Trips = () => {
           )}
 
           {/* Empty state */}
-          {hasRequiredFilters && !isLoading && !isError && trips.length === 0 && (
+          {hasAnyFilter && !isLoading && !isError && trips.length === 0 && (
             <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
               <MdOutlineDirectionsBus size={40} className="text-gray-300 dark:text-gray-600" />
               <p className="text-gray-500 dark:text-gray-400 text-sm font-semibold">
-                No trips found for this route.
+                No trips found.
               </p>
               <p className="text-gray-400 dark:text-gray-600 text-xs">
-                Try a different date or stop combination.
+                Try a different destination, date, or remove some filters.
               </p>
             </div>
           )}
 
           {/* Trip cards */}
-          {hasRequiredFilters && !isLoading && !isError && trips.length > 0 &&
-            trips.map((trip) => (
-              <TripCard
-                key={trip.id}
-                trip={trip}
-                onClick={() => navigate('/trips/' + trip.id)}
-              />
-            ))
-          }
+          {hasAnyFilter && !isLoading && !isError && trips.map((trip) => (
+            <TripCard
+              key={trip.id}
+              trip={trip}
+              onClick={() => navigate('/trips/' + trip.id)}
+            />
+          ))}
         </div>
       </div>
     </div>

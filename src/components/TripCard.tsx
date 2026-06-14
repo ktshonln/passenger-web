@@ -38,6 +38,9 @@ const TripCard = ({ trip, onClick }: TripCardProps) => {
         </div>
         <div className="flex flex-col items-end gap-1 shrink-0 ml-2">
           <span className="text-sm font-bold text-gray-900 dark:text-white">{departureTime}</span>
+          {trip.price != null && (
+            <span className="text-xs font-semibold text-brand">{trip.price.toLocaleString()} {trip.currency}</span>
+          )}
           {seatsBadge()}
         </div>
       </div>

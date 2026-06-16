@@ -13,6 +13,7 @@ import { useCreateTicket } from '../hooks/useBooking';
 import { useToastStore } from '../stores/toastStore';
 import { openTicketStream } from '../utils/sseClient';
 import { getCdnUrl } from '../utils/media';
+import userService from '../services/userService';
 import StopsMap from '../components/StopsMap';
 import PrintTicket from '../components/PrintTicket';
 import type { Stop, TicketConfirmed, TicketFull } from '../types';
@@ -50,6 +51,7 @@ const TripDetail = () => {
   const [momoStep, setMomoStep] = useState<0 | 1>(0);
   const [sseError, setSseError] = useState<{ message: string; retryable: boolean } | null>(null);
   const [countdown, setCountdown] = useState(COUNTDOWN);
+  const [isValidatingPassword, setIsValidatingPassword] = useState(false);
   const sseCleanupRef = useRef<(() => void) | null>(null);
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -107,32 +109,50 @@ const TripDetail = () => {
 
   useEffect(() => () => { sseCleanupRef.current?.(); stopCountdown(); }, []);
 
-  const handleWalletConfirm = () => {
+  const handleWalletConfirm = async () => {
     if (!trip || !price) return;
-    createTicket.mutate(
-      { trip_id: trip.id, boarding_stop_id: boardingStopId, alighting_stop_id: alightingStopId, seats_count: seatsCount, payment_method: 'wallet' },
-      {
-        onSuccess: (data) => {
-          if ('id' in data) {
-            setConfirmedTicket(data as TicketConfirmed);
-            setFlowState('success');
-          }
+    setIsValidatingPassword(true);
+    try {
+      const { sudoToken } = await userService.validatePassword(password, 'purchase_ticket');
+      createTicket.mutate(
+        {
+          payload: { trip_id: trip.id, boarding_stop_id: boardingStopId, alighting_stop_id: alightingStopId, seats_count: seatsCount, payment_method: 'wallet' },
+          sudoToken,
         },
-        onError: (err: any) => {
-          const code = err?.response?.data?.error?.code;
-          if (code === 'INSUFFICIENT_WALLET_BALANCE') {
-            showToast('Not enough balance to complete this purchase', 'error');
-            navigate('/wallet');
-          }
-        },
+        {
+          onSuccess: (data) => {
+            if ('id' in data) {
+              setConfirmedTicket(data as TicketConfirmed);
+              setFlowState('success');
+            }
+          },
+          onError: (err: any) => {
+            const code = err?.response?.data?.error?.code;
+            if (code === 'INSUFFICIENT_WALLET_BALANCE') {
+              showToast('Not enough balance to complete this purchase', 'error');
+              navigate('/wallet');
+            }
+          },
+        }
+      );
+    } catch (err: any) {
+      const code = err?.response?.data?.error?.code;
+      if (code === 'INVALID_PASSWORD' || err?.response?.status === 401) {
+        showToast('Incorrect password. Please try again.', 'error');
+      } else {
+        showToast('Password verification failed. Please try again.', 'error');
       }
-    );
+    } finally {
+      setIsValidatingPassword(false);
+    }
   };
 
   const handleMoMoConfirm = () => {
     if (!trip || !price) return;
     createTicket.mutate(
-      { trip_id: trip.id, boarding_stop_id: boardingStopId, alighting_stop_id: alightingStopId, seats_count: seatsCount, payment_method: momoProvider, phone: momoPhone, passenger_name: passengerName },
+      {
+        payload: { trip_id: trip.id, boarding_stop_id: boardingStopId, alighting_stop_id: alightingStopId, seats_count: seatsCount, payment_method: momoProvider, phone: momoPhone, passenger_name: passengerName },
+      },
       {
         onSuccess: (data) => {
           if ('ticket_id' in data) {
@@ -359,8 +379,8 @@ const TripDetail = () => {
                       <div className="relative">
                         <input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} placeholder={t('enterPasswordConfirm')} className="w-full px-4 py-3 pr-12 rounded-xl border border-gray-200 dark:border-neutral-700 bg-gray-50/50 dark:bg-[#1F2937]/50 text-gray-900 dark:text-white text-sm outline-none" />
                         <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400">{showPassword ? <FiEyeOff size={16} /> : <FiEye size={16} />}</button>
-                      </div>                      <button onClick={handleWalletConfirm} disabled={!password || createTicket.isPending} className="w-full bg-brand text-white py-3 rounded-xl font-bold text-sm hover:bg-brand/90 active:scale-95 transition-all disabled:opacity-60 flex items-center justify-center gap-2">
-                        {createTicket.isPending ? <><FiLoader className="animate-spin" size={16} /> {t('processing')}</> : t('confirmAndPay')}
+                      </div>                      <button onClick={handleWalletConfirm} disabled={!password || createTicket.isPending || isValidatingPassword} className="w-full bg-brand text-white py-3 rounded-xl font-bold text-sm hover:bg-brand/90 active:scale-95 transition-all disabled:opacity-60 flex items-center justify-center gap-2">
+                        {(createTicket.isPending || isValidatingPassword) ? <><FiLoader className="animate-spin" size={16} /> {t('processing')}</> : t('confirmAndPay')}
                       </button>
                     </>
                   ) : (

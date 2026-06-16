@@ -39,4 +39,7 @@ export default {
 
   getAvatarPresignedUrl: (contentType: string) =>
     axiosInstance.get<{ upload_url: string; path: string }>(`${endpoint}/avatar/presigned-url`, { params: { content_type: contentType } }).then((res) => res.data),
+
+  validatePassword: (password: string, action: string): Promise<{ sudoToken: string; expiresAt: string }> =>
+    axiosInstance.post<{ sudoToken: string; expiresAt: string }>(`${endpoint}/validate-password`, { password, action }).then((res) => res.data),
 };

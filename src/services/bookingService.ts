@@ -4,12 +4,14 @@ import type { TicketConfirmed, TicketInitiated, TicketPayload, TopUpInitiated, T
 export default {
   /**
    * POST /tickets
-   * Wallet payment → 201 TicketConfirmed
+   * Wallet payment → 201 TicketConfirmed (requires x-sudo-token for wallet)
    * MoMo payment  → 202 TicketInitiated { ticket_id }
    */
-  createTicket: (payload: TicketPayload): Promise<TicketConfirmed | TicketInitiated> =>
+  createTicket: (payload: TicketPayload, sudoToken?: string): Promise<TicketConfirmed | TicketInitiated> =>
     axiosInstance
-      .post<TicketConfirmed | TicketInitiated>('/tickets', payload)
+      .post<TicketConfirmed | TicketInitiated>('/tickets', payload, {
+        headers: sudoToken ? { 'x-sudo-token': sudoToken } : undefined,
+      })
       .then((res) => res.data),
 
   /**

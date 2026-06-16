@@ -3,10 +3,15 @@ import bookingService from "../services/bookingService";
 import { useToastStore } from "../stores/toastStore";
 import type { TicketConfirmed, TicketInitiated, TicketPayload } from "../types";
 
+interface CreateTicketArgs {
+  payload: TicketPayload;
+  sudoToken?: string;
+}
+
 export const useCreateTicket = () => {
   const showToast = useToastStore((s) => s.showToast);
-  return useMutation<TicketConfirmed | TicketInitiated, Error, TicketPayload>({
-    mutationFn: (payload) => bookingService.createTicket(payload),
+  return useMutation<TicketConfirmed | TicketInitiated, Error, CreateTicketArgs>({
+    mutationFn: ({ payload, sudoToken }) => bookingService.createTicket(payload, sudoToken),
     onError: (err: any) => {
       const code = err?.response?.data?.error?.code;
       const available = err?.response?.data?.error?.available;
@@ -16,6 +21,8 @@ export const useCreateTicket = () => {
         showToast("Price not found for this route segment.", "error");
       } else if (code === "INSUFFICIENT_WALLET_BALANCE") {
         // handled inline — no toast
+      } else if (code === "STEP_UP_REQUIRED" || code === "STEP_UP_EXPIRED" || code === "STEP_UP_INVALID") {
+        showToast("Password verification failed. Please try again.", "error");
       } else {
         showToast("Booking failed. Please try again.", "error");
       }

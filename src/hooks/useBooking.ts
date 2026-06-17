@@ -29,3 +29,23 @@ export const useCreateTicket = () => {
     },
   });
 };
+
+export const useCancelTicket = () => {
+  const showToast = useToastStore((s) => s.showToast);
+  return useMutation<void, Error, { ticketId: string; reason?: string }>({
+    mutationFn: ({ ticketId, reason }) => bookingService.cancelTicket(ticketId, reason),
+    onSuccess: () => {
+      showToast("Ticket cancelled. A refund has been initiated.", "success");
+    },
+    onError: (err: any) => {
+      const code = err?.response?.data?.error?.code;
+      if (err?.response?.status === 409) {
+        showToast("This ticket cannot be cancelled at this time.", "error");
+      } else if (err?.response?.status === 403) {
+        showToast("Cancellation is not allowed for this trip.", "error");
+      } else {
+        showToast(code ?? "Failed to cancel ticket. Please try again.", "error");
+      }
+    },
+  });
+};

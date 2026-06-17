@@ -9,12 +9,13 @@ import { useTripDetail } from '../hooks/useTripDetail';
 import { useUser } from '../hooks/useUser';
 import { useWalletBalance } from '../hooks/useWallet';
 import { usePrice } from '../hooks/usePrice';
-import { useCreateTicket } from '../hooks/useBooking';
+import { useCreateTicket, useCancelTicket } from '../hooks/useBooking';
 import { useToastStore } from '../stores/toastStore';
 import { openTicketStream } from '../utils/sseClient';
 import { getCdnUrl } from '../utils/media';
 import userService from '../services/userService';
 import StopsMap from '../components/StopsMap';
+import BusTracker from '../components/BusTracker';
 import PrintTicket from '../components/PrintTicket';
 import type { Stop, TicketConfirmed, TicketFull } from '../types';
 
@@ -59,6 +60,8 @@ const TripDetail = () => {
     boardingStopId, alightingStopId
   );
   const createTicket = useCreateTicket();
+  const cancelTicket = useCancelTicket();
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
 
   const stops: Stop[] = trip
     ? [...trip.stops].sort((a, b) => a.order - b.order)
@@ -268,14 +271,13 @@ const TripDetail = () => {
           </div>
         </div>
 
-        {/* Stops map (non-express) */}
-        {!trip.is_express && stops.length > 0 && (
+        {/* Stops map — shown for all trips that have stops */}
+        {stops.length > 0 && (
           <div className="bg-white dark:bg-[#111827] rounded-2xl border border-gray-100 dark:border-white/5 p-5">
             <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
               {t('route')} · {stops.length} {stops.length !== 1 ? t('stops') : t('stop')}
             </p>
             <StopsMap stops={stops} />
-            {/* Stop name list below the map for quick reference */}
             <ol className="mt-3 space-y-1">
               {stops.map((stop, i) => (
                 <li key={stop.id} className="flex items-center gap-2 text-sm">
@@ -286,6 +288,22 @@ const TripDetail = () => {
                 </li>
               ))}
             </ol>
+          </div>
+        )}
+
+        {/* Live bus tracking — only when trip is active and bus is assigned */}
+        {trip.status === 'active' && trip.bus?.id && (
+          <div className="bg-white dark:bg-[#111827] rounded-2xl border border-gray-100 dark:border-white/5 p-5">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse shrink-0" />
+              <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                Live Bus Location
+              </p>
+              {trip.bus.plate && (
+                <span className="text-xs text-gray-400 dark:text-gray-600 font-mono ml-auto">{trip.bus.plate}</span>
+              )}
+            </div>
+            <BusTracker busId={trip.bus.id} busPlate={trip.bus.plate} />
           </div>
         )}
 
@@ -470,6 +488,51 @@ const TripDetail = () => {
           </div>
           <button onClick={() => navigate('/trips')} className="w-full max-w-sm bg-brand text-white py-3.5 rounded-xl font-bold text-sm hover:bg-brand/90 active:scale-95 transition-all">{t('done')}</button>
           <PrintTicket ticketId={'id' in confirmedTicket ? confirmedTicket.id : ''} />
+          {/* Cancel ticket — only if trip allows cancellation */}
+          {trip.cancellation_allowed && 'id' in confirmedTicket && (
+            <button
+              onClick={() => setShowCancelConfirm(true)}
+              className="mt-3 text-sm text-red-500 dark:text-red-400 hover:text-red-600 dark:hover:text-red-300 transition-colors"
+            >
+              Cancel this ticket
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Cancel confirmation dialog */}
+      {showCancelConfirm && confirmedTicket && 'id' in confirmedTicket && (
+        <div className="fixed inset-0 z-[300] flex items-center justify-center px-4">
+          <div className="absolute inset-0 bg-black/60" onClick={() => setShowCancelConfirm(false)} />
+          <div className="relative bg-white dark:bg-[#111827] rounded-2xl p-6 max-w-sm w-full text-center space-y-4 border border-gray-100 dark:border-white/5 shadow-2xl">
+            <p className="font-bold text-gray-900 dark:text-white">Cancel your ticket?</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              A refund will be issued to your original payment method. This cannot be undone.
+            </p>
+            <button
+              onClick={() => {
+                cancelTicket.mutate(
+                  { ticketId: (confirmedTicket as any).id },
+                  {
+                    onSuccess: () => {
+                      setShowCancelConfirm(false);
+                      navigate('/trips');
+                    },
+                  }
+                );
+              }}
+              disabled={cancelTicket.isPending}
+              className="w-full bg-red-500 text-white py-3 rounded-xl font-bold text-sm hover:bg-red-600 active:scale-95 transition-all disabled:opacity-60 flex items-center justify-center gap-2"
+            >
+              {cancelTicket.isPending ? <><FiLoader className="animate-spin" size={16} />Cancelling…</> : 'Yes, cancel ticket'}
+            </button>
+            <button
+              onClick={() => setShowCancelConfirm(false)}
+              className="w-full text-sm text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors py-1"
+            >
+              Keep my ticket
+            </button>
+          </div>
         </div>
       )}
     </div>

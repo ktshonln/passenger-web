@@ -15,6 +15,15 @@ export default {
       .then((res) => res.data),
 
   /**
+   * POST /tickets/:id/cancel
+   * Cancels a confirmed ticket and initiates a refund.
+   */
+  cancelTicket: (ticketId: string, reason?: string): Promise<void> =>
+    axiosInstance
+      .post(`/tickets/${ticketId}/cancel`, reason ? { reason } : {})
+      .then(() => undefined),
+
+  /**
    * POST /users/me/wallet/topup
    * Returns 202 { topup_id }
    */

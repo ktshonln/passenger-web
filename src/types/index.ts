@@ -46,6 +46,7 @@ export interface Stop {
 export interface Trip {
   id: string;
   is_express: boolean;
+  status?: 'scheduled' | 'active' | 'completed' | 'cancelled';
   origin: Location;
   destination: Location;
   departure_at: string;
@@ -54,6 +55,7 @@ export interface Trip {
   currency: string;
   available_seats: number;
   total_seats: number;
+  cancellation_allowed?: boolean;
   company: TripCompany;
   bus: TripBus;
 }

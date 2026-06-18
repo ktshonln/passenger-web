@@ -19,7 +19,7 @@ import BusTracker from '../components/BusTracker';
 import PrintTicket from '../components/PrintTicket';
 import type { Stop, TicketConfirmed, TicketFull } from '../types';
 
-type FlowState = 'idle' | 'sheet' | 'momo-waiting' | 'success' | 'failed' | 'timeout';
+type FlowState = 'idle' | 'sheet' | 'momo-waiting' | 'wallet-waiting' | 'success' | 'failed' | 'timeout';
 
 const maskPhone = (p: string) => {
   const d = p.replace(/\s/g, '');
@@ -124,7 +124,27 @@ const TripDetail = () => {
         },
         {
           onSuccess: (data) => {
-            if ('id' in data) {
+            if ('ticket_id' in data) {
+              setFlowState('wallet-waiting');
+              startCountdown();
+              const cleanup = openTicketStream(data.ticket_id, {
+                onConfirmed: (evt) => {
+                  stopCountdown();
+                  setConfirmedTicket(evt.ticket ?? null);
+                  setFlowState('success');
+                },
+                onFailed: (evt) => {
+                  stopCountdown();
+                  setSseError({ message: evt.message ?? 'Payment was not completed.', retryable: evt.retryable ?? true });
+                  setFlowState('failed');
+                },
+                onTimeout: () => {
+                  stopCountdown();
+                  setFlowState('timeout');
+                },
+              });
+              sseCleanupRef.current = cleanup;
+            } else if ('id' in data) {
               setConfirmedTicket(data as TicketConfirmed);
               setFlowState('success');
             }
@@ -451,6 +471,17 @@ const TripDetail = () => {
           <div className="bg-gray-100 dark:bg-white/10 rounded-2xl px-6 py-3 mb-6">
             <p className="text-base font-mono font-semibold tracking-widest text-gray-800 dark:text-white">{maskPhone(momoPhone)}</p>
           </div>
+          <div aria-live="polite" className="text-4xl font-extrabold tabular-nums text-gray-900 dark:text-white">{mins}:{secs}</div>
+          <p className="text-gray-400 dark:text-white/50 text-xs mt-2">{t('timeRemaining')}</p>
+        </div>
+      )}
+
+      {/* Wallet Waiting Screen */}
+      {flowState === 'wallet-waiting' && (
+        <div className="fixed inset-0 z-[200] bg-white dark:bg-[#0B1120] flex flex-col items-center justify-center px-6">
+          <FiLoader className="animate-spin text-brand mb-8" size={56} />
+          <h2 className="text-xl font-bold mb-2 text-gray-900 dark:text-white">Processing Payment</h2>
+          <p className="text-gray-500 dark:text-white/70 text-sm mb-6">Please wait while we confirm your ticket...</p>
           <div aria-live="polite" className="text-4xl font-extrabold tabular-nums text-gray-900 dark:text-white">{mins}:{secs}</div>
           <p className="text-gray-400 dark:text-white/50 text-xs mt-2">{t('timeRemaining')}</p>
         </div>

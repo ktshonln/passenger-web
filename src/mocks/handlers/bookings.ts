@@ -12,23 +12,8 @@ export const bookingHandlers = [
       return HttpResponse.json({ error: { code: "NO_SEATS_AVAILABLE", available: 0 } }, { status: 400 });
     }
 
-    // Wallet payment — returns 201 with full ticket (auth enforced by real gateway, not mock)
-    if (!body.payment_method || body.payment_method === "wallet") {
-      const amount = 2500 * (body.seats_count || 1);
-      return HttpResponse.json({
-        id: `ticket-wallet-${Date.now()}`,
-        status: "confirmed",
-        amount,
-        currency: "RWF",
-        seats_count: body.seats_count || 1,
-        payment_method: "wallet",
-        boarding_stop: { id: body.boarding_stop_id, name: "Kigali" },
-        alighting_stop: { id: body.alighting_stop_id, name: "Musanze" },
-      }, { status: 201 });
-    }
-
-    // MoMo — returns 202 with ticket_id
-    const ticket_id = `ticket-momo-${Date.now()}`;
+    // All payments now return 202 with ticket_id, client must use SSE to confirm
+    const ticket_id = `ticket-${body.payment_method || "wallet"}-${Date.now()}`;
     return HttpResponse.json({ ticket_id }, { status: 202 });
   }),
 

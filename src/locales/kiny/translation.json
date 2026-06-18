@@ -3,11 +3,10 @@
   "signup": "Iyandikishe",
   "searchPlaceholder": "Murifuza kujya he?",
   "explainer": "Shyiramo akarere wifuza kujyamo, maze ugure itike utavuye aho uri!",
-  "privacy": "Ababwiriza Ndindabanga",
+  "privacy": "Amabwiriza Ndindabanga",
   "cookies": "Amabwiriza Ngenzabikorwa",
   "contact": "Huza Natwe",
   "allRights": "Uburenganzira bwose burazigamwe.",
-
   "signUpTitle": "Rema Konti Yawe",
   "logInTitle": "Murakaza neza nanone!",
   "logInSubtitle": "Injira ugenzure amatike yawe",
@@ -28,7 +27,6 @@
   "confirmOtp": "Emeza kode",
   "resendOtp": "Ohereza kode nanone",
   "resendIn": "Ohereza nanone muri {{seconds}}s",
-
   "profile": "Porofire",
   "logout": "Sohoka",
   "profileTitle": "Igenamiterere rya Konti",
@@ -50,7 +48,6 @@
   "appPushDesc": "Imenyesha y'ubutumwa bw'ibikoresho byihuse ku telefone yawe.",
   "smsMessages": "Ubutumwa bwa SMS",
   "smsMessagesDesc": "Receive text updates when offline or roaming.",
-
   "wallet": "Ikofi",
   "totalBalance": "Amafaranga Yose",
   "topUp": "Ongera",
@@ -82,7 +79,6 @@
   "currentBalance": "Ubu mufite",
   "add": "Ongeraho",
   "with": "ukoresheje",
-
   "trips": "Inzira",
   "searchTrips": "Shakisha inzira",
   "boardingStop": "Ahahagarara h'intangiriro",
@@ -117,13 +113,11 @@
   "express": "Express",
   "stops": "amahagarara",
   "stop": "ihagarara",
-
   "back": "Subira ku nzira",
   "tripUnavailable": "Uru rugendo ntiruboneka.",
   "priceUnavailable": "Igiciro ntikibonetse ku miterere iyi",
   "waitingForPayment": "Tegereza kwishyura",
   "enterPinConfirm": "Injiza PIN yawe guhamya",
-
   "cookiePolicy": "Ababwiriza ba Kuki",
   "pageNotFound": "Urupapuro ntirubonetse",
   "goHome": "Subira ahabanza",

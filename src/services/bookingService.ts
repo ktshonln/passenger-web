@@ -24,6 +24,15 @@ export default {
       .then(() => undefined),
 
   /**
+   * GET /tickets/:id
+   * Fetch full ticket details.
+   */
+  getTicketById: (ticketId: string): Promise<any> =>
+    axiosInstance
+      .get(`/tickets/${ticketId}`)
+      .then((res) => res.data),
+
+  /**
    * POST /users/me/wallet/topup
    * Returns 202 { topup_id }
    */

@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { FiPrinter, FiX, FiCheck } from 'react-icons/fi';
 import { useToastStore } from '../stores/toastStore';
-import { baseUrl } from '../services/apiClient';
+import bookingService from '../services/bookingService';
 
 type PaperSize = '58mm' | '80mm' | 'a4';
 
@@ -32,6 +32,84 @@ interface PrintTicketProps {
   ticketId: string;
 }
 
+const buildReceiptHtml = (ticket: any, size: string): string => {
+  const isA4 = size === 'a4';
+  const is80 = size === '80mm';
+  const width = isA4 ? '210mm' : size;
+  const qrSize = isA4 ? '50mm' : is80 ? '40mm' : '30mm';
+  const pageSize = isA4 ? 'a4' : `${size} auto`;
+  const wrapperStyle = isA4
+    ? 'max-width:80mm;margin:20mm auto;'
+    : '';
+
+  const qrPlaceholder = `data:image/svg+xml;base64,${btoa(`<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="100" height="100" fill="white"/><rect x="10" y="10" width="30" height="30" fill="black"/><rect x="15" y="15" width="20" height="20" fill="white"/><rect x="20" y="20" width="10" height="10" fill="black"/><rect x="60" y="10" width="30" height="30" fill="black"/><rect x="65" y="15" width="20" height="20" fill="white"/><rect x="70" y="20" width="10" height="10" fill="black"/><rect x="10" y="60" width="30" height="30" fill="black"/><rect x="15" y="65" width="20" height="20" fill="white"/><rect x="20" y="70" width="10" height="10" fill="black"/><rect x="45" y="45" width="10" height="10" fill="black"/><rect x="60" y="60" width="10" height="10" fill="black"/><rect x="75" y="60" width="10" height="10" fill="black"/><rect x="60" y="75" width="10" height="10" fill="black"/><rect x="75" y="75" width="10" height="10" fill="black"/></svg>`)}`;
+
+  const companyName = ticket?.company?.name || 'Transport Company';
+  const passengerName = ticket?.passenger_name || 'Passenger';
+  const phone = ticket?.passenger_phone || '';
+  const from = ticket?.boarding_stop?.name || '';
+  const to = ticket?.alighting_stop?.name || '';
+  const departureAt = ticket?.departure_at ? new Date(ticket.departure_at) : new Date();
+  const dateStr = departureAt.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  const timeStr = departureAt.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+  const seats = ticket?.seats_count || 1;
+  const amount = ticket?.amount ? `RWF ${ticket.amount.toLocaleString()}` : '';
+  const method = ticket?.payment_method || 'Wallet';
+  const busPlate = ticket?.bus?.plate || '';
+  const tId = ticket?.id || '';
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Ticket - ${tId}</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Courier New',monospace;font-size:11px;background:#fff;color:#000;width:${width};}
+.receipt-wrapper{${wrapperStyle}}
+.receipt{width:100%;padding:4mm;}
+.company-name{text-align:center;font-size:13px;font-weight:bold;margin-bottom:3mm;}
+.divider{border-top:1px dashed #000;margin:2mm 0;}
+.title{text-align:center;font-size:12px;font-weight:bold;letter-spacing:2px;margin:2mm 0;}
+.row{display:flex;justify-content:space-between;margin:1mm 0;}
+.label{color:#555;}
+.qr-wrapper{text-align:center;margin:3mm 0;}
+.qr-wrapper img{width:${qrSize};height:${qrSize};}
+.ticket-id{text-align:center;font-size:9px;color:#555;margin-bottom:3mm;}
+.powered-by{text-align:center;font-size:8px;color:#999;margin-top:3mm;}
+@media print{body{margin:0;}@page{margin:0;size:${pageSize};}}
+</style>
+</head>
+<body>
+<div class="receipt-wrapper"><div class="receipt">
+<div class="company-name">${companyName}</div>
+<div class="divider"></div>
+<div class="title">TICKET</div>
+<div class="divider"></div>
+<div class="row"><span class="label">Passenger</span><span>${passengerName}</span></div>
+${phone ? `<div class="row"><span class="label">Phone</span><span>${phone}</span></div>` : ''}
+<div class="divider"></div>
+<div class="row"><span class="label">From</span><span>${from}</span></div>
+<div class="row"><span class="label">To</span><span>${to}</span></div>
+<div class="row"><span class="label">Date</span><span>${dateStr}</span></div>
+<div class="row"><span class="label">Time</span><span>${timeStr}</span></div>
+<div class="divider"></div>
+<div class="row"><span class="label">Seats</span><span>${seats}</span></div>
+<div class="row"><span class="label">Amount</span><span>${amount}</span></div>
+<div class="row"><span class="label">Method</span><span style="text-transform: capitalize;">${method}</span></div>
+<div class="divider"></div>
+${busPlate ? `<div class="row"><span class="label">Bus</span><span>${busPlate}</span></div><div class="divider"></div>` : ''}
+<div class="qr-wrapper"><img src="${qrPlaceholder}" alt="Scan to verify ticket" /></div>
+<div class="ticket-id">${tId}</div>
+<div class="divider"></div>
+<div class="powered-by">powered by katisha online</div>
+</div></div>
+<script>window.onload=function(){window.print();}</script>
+</body>
+</html>`;
+};
+
 const PrintTicket = ({ ticketId }: PrintTicketProps) => {
   const showToast = useToastStore((s) => s.showToast);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
@@ -52,30 +130,27 @@ const PrintTicket = ({ ticketId }: PrintTicketProps) => {
       iframeRef.current = null;
     }
 
-    const printUrl = `${baseUrl}/tickets/${ticketId}/print?size=${size}`;
-
     try {
-      // Use fetch (intercepted by MSW in dev, real request in prod) instead of
-      // setting iframe.src directly — iframe navigation requests bypass MSW.
-      const res = await fetch(printUrl, { credentials: 'include' });
-
-      if (res.status === 403) {
-        showToast('You do not have permission to print this ticket', 'error');
-        setIsPrinting(false);
-        return;
-      }
-      if (res.status === 404) {
+      if (!ticketId) {
         showToast('Ticket not found', 'error');
         setIsPrinting(false);
         return;
       }
-      if (!res.ok) {
-        showToast('Failed to load ticket for printing', 'error');
+
+      let ticket;
+      try {
+        ticket = await bookingService.getTicketById(ticketId);
+      } catch (err: any) {
+        if (err?.response?.status === 404) {
+          showToast('Ticket not found', 'error');
+        } else {
+          showToast('Failed to load ticket for printing', 'error');
+        }
         setIsPrinting(false);
         return;
       }
 
-      const html = await res.text();
+      const html = buildReceiptHtml(ticket, size);
 
       // Create a hidden iframe and write the HTML directly into it
       const iframe = document.createElement('iframe');
